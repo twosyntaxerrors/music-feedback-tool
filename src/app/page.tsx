@@ -73,9 +73,9 @@ export default function AIAudioAnalysisLanding() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-950 to-gray-900 text-gray-100 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_var(--mouse-x)_var(--mouse-y),rgba(59,130,246,0.1),transparent_50%)] pointer-events-none" />
-      <motion.div className="fixed top-0 left-0 right-0 h-1 bg-blue-500 origin-left z-50" style={{ scaleX }} />
+    <div className="min-h-screen bg-black text-gray-100 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_var(--mouse-x)_var(--mouse-y),rgba(0,255,242,0.08),transparent_50%)] pointer-events-none" />
+      <motion.div className="fixed top-0 left-0 right-0 h-0.5 bg-[#00fff2] origin-left z-50 shadow-[0_0_10px_#00fff2]" style={{ scaleX }} />
       
       <Header />
 

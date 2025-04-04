@@ -78,8 +78,15 @@ export function Header() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Link href="/" className="flex items-center space-x-2">
-              <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
+            <Link 
+              href="/" 
+              className="flex items-center space-x-2"
+              onClick={(e) => {
+                e.preventDefault();
+                window.location.href = '/';
+              }}
+            >
+              <span className="text-2xl font-righteous bg-clip-text text-transparent bg-gradient-to-r from-[#00fff2] to-[#00c8ff] drop-shadow-[0_0_10px_rgba(0,255,242,0.3)]">
                 SoundScope AI
               </span>
             </Link>
@@ -93,7 +100,7 @@ export function Header() {
                   <NavigationMenuItem key={item.title}>
                     {item.children ? (
                       <>
-                        <NavigationMenuTrigger className="text-gray-100 hover:text-blue-400">
+                        <NavigationMenuTrigger className="text-gray-100 hover:text-[#00fff2]">
                           {item.title}
                         </NavigationMenuTrigger>
                         <NavigationMenuContent>
@@ -123,7 +130,7 @@ export function Header() {
                     ) : (
                       <button
                         onClick={() => item.scrollTo && scrollToSection(item.scrollTo)}
-                        className="inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium text-gray-100 transition-colors hover:bg-gray-800 hover:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        className="inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium text-gray-100 transition-colors hover:bg-gray-800 hover:text-[#00fff2] focus:outline-none focus:ring-2 focus:ring-[#00fff2] focus:ring-offset-2"
                       >
                         {item.title}
                       </button>

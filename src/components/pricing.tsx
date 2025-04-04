@@ -55,7 +55,7 @@ export function Pricing() {
   return (
     <section className="py-24 bg-gray-900/50 relative overflow-hidden" id="pricing">
       {/* Gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-gray-900/0 via-blue-950/10 to-gray-900/0 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-gray-900/0 via-[#00fff2]/5 to-gray-900/0 pointer-events-none" />
       
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
@@ -64,7 +64,7 @@ export function Pricing() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             viewport={{ once: true }}
-            className="text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500"
+            className="text-3xl md:text-4xl font-righteous mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#00fff2] to-[#00c8ff] drop-shadow-[0_0_10px_rgba(0,255,242,0.3)]"
           >
             Pricing Plans
           </motion.h2>
@@ -89,20 +89,20 @@ export function Pricing() {
               viewport={{ once: true }}
               className={`relative p-6 rounded-xl backdrop-blur-sm bg-gray-800/30 border ${
                 plan.popular 
-                  ? "border-blue-500 shadow-lg shadow-blue-500/10" 
-                  : "border-gray-700 hover:border-gray-600"
+                  ? "border-[#00fff2] shadow-lg shadow-[#00fff2]/10" 
+                  : "border-gray-700 hover:border-[#00fff2]/40"
               } transition-all duration-300 group`}
             >
               {plan.popular && (
-                <div className="absolute -top-4 inset-x-0 mx-auto w-fit px-3 py-1 bg-blue-500 rounded-full text-xs font-bold text-white">
+                <div className="absolute -top-4 inset-x-0 mx-auto w-fit px-3 py-1 bg-[#00fff2] text-black rounded-full text-xs font-bold">
                   MOST POPULAR
                 </div>
               )}
               
               <div className="relative z-10">
-                <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
+                <h3 className="text-2xl font-righteous text-[#00fff2] mb-2">{plan.name}</h3>
                 <div className="mb-4">
-                  <span className="text-4xl font-bold text-white">{plan.price}</span>
+                  <span className="text-4xl font-righteous text-white">{plan.price}</span>
                   <span className="text-gray-400">/month</span>
                 </div>
                 <p className="text-gray-300 mb-6">{plan.description}</p>
@@ -110,7 +110,7 @@ export function Pricing() {
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((feature, i) => (
                     <li key={i} className="flex items-start">
-                      <Check className="h-5 w-5 text-blue-400 shrink-0 mr-2" />
+                      <Check className="h-5 w-5 text-[#00fff2] shrink-0 mr-2" />
                       <span className="text-gray-300">{feature}</span>
                     </li>
                   ))}
@@ -119,8 +119,8 @@ export function Pricing() {
                 <Button 
                   className={`w-full ${
                     plan.popular 
-                      ? "bg-blue-500 hover:bg-blue-600 text-white" 
-                      : "bg-gray-700 hover:bg-gray-600 text-gray-100"
+                      ? "bg-[#00fff2] hover:bg-[#00c8ff] text-black font-semibold" 
+                      : "bg-gray-800 hover:bg-gray-700 text-gray-100 border border-[#00fff2]/20 hover:border-[#00fff2]/40"
                   }`}
                 >
                   {plan.cta}
@@ -128,7 +128,7 @@ export function Pricing() {
               </div>
               
               {plan.popular && (
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl z-0" />
+                <div className="absolute inset-0 bg-gradient-to-br from-[#00fff2]/10 to-[#00c8ff]/10 rounded-xl z-0" />
               )}
             </motion.div>
           ))}
