@@ -6,48 +6,17 @@ import { Check } from "lucide-react"
 
 const plans = [
   {
-    name: "Basic",
-    price: "$9",
-    description: "Perfect for new musicians just getting started",
-    features: [
-      "10 track analyses per month",
-      "Basic genre recognition",
-      "Core performance metrics",
-      "Email support",
-    ],
-    cta: "Start Free Trial",
-    popular: false,
-  },
-  {
     name: "Pro",
-    price: "$29",
+    price: "FREE",
     description: "For serious musicians and producers",
     features: [
       "50 track analyses per month",
       "Advanced genre & influence detection",
       "Detailed performance metrics",
       "Personalized improvement suggestions",
-      "Priority email support",
-      "API access",
     ],
     cta: "Get Started",
     popular: true,
-  },
-  {
-    name: "Studio",
-    price: "$99",
-    description: "For professional studios and production teams",
-    features: [
-      "Unlimited track analyses",
-      "Complete genre & subgenre analysis",
-      "Advanced metrics with historical data",
-      "In-depth professional recommendations",
-      "Priority 24/7 support",
-      "Team collaboration tools",
-      "Custom branding options",
-    ],
-    cta: "Contact Sales",
-    popular: false,
   },
 ]
 
@@ -79,7 +48,7 @@ export function Pricing() {
           </motion.p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 max-w-md mx-auto">
           {plans.map((plan, index) => (
             <motion.div
               key={index}
@@ -103,7 +72,6 @@ export function Pricing() {
                 <h3 className="text-2xl font-righteous text-[#00fff2] mb-2">{plan.name}</h3>
                 <div className="mb-4">
                   <span className="text-4xl font-righteous text-white">{plan.price}</span>
-                  <span className="text-gray-400">/month</span>
                 </div>
                 <p className="text-gray-300 mb-6">{plan.description}</p>
                 

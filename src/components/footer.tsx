@@ -19,7 +19,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-gray-400 max-w-md mb-4">
-              Elevate your music with AI-powered analysis. Get detailed insights and recommendations to take your production to the next level.
+              Elevate your music with audio analysis. Get detailed insights and recommendations to take your production to the next level.
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-[#00fff2] transition-colors">

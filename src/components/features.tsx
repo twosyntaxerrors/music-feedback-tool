@@ -6,8 +6,8 @@ import { Bot, BarChart3, Wand2, Ear, Music, Zap } from "lucide-react"
 export function Features() {
   const features = [
     {
-      title: "AI-Powered Analysis",
-      description: "Our advanced AI engine breaks down your track to identify strengths and areas for improvement.",
+      title: "Smart Analytics",
+      description: "Our advanced algorithm breaks down your track to identify strengths and areas for improvement.",
       icon: <Bot className="w-10 h-10 text-[#00fff2]" />,
     },
     {
@@ -27,7 +27,7 @@ export function Features() {
     },
     {
       title: "Instant Results",
-      description: "No waiting — get comprehensive analysis in seconds, not hours or days.",
+      description: "No waiting. Get comprehensive analysis in seconds, not hours or days.",
       icon: <Zap className="w-10 h-10 text-[#00fff2]" />,
     },
     {
@@ -60,7 +60,7 @@ export function Features() {
             viewport={{ once: true }}
             className="text-xl text-gray-300 max-w-2xl mx-auto"
           >
-            Discover how our AI-powered tools help you create better music
+            Discover how our audio analysis tools help you create better music
           </motion.p>
         </div>
         

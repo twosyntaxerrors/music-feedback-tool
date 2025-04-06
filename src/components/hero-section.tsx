@@ -40,12 +40,11 @@ export function HeroSection({ onUploadComplete, onError, onReset, showUploader =
             />
           </div>
           <h1 className={`font-righteous ${showUploader ? 'text-4xl md:text-6xl' : 'text-2xl md:text-4xl'} mb-6 bg-clip-text text-transparent bg-gradient-to-r from-[#00fff2] via-[#00c8ff] to-[#00fff2] drop-shadow-[0_0_10px_rgba(0,255,242,0.3)]`}>
-            Unlock Your Music's Potential with AI
+          Real Feedback. No Guesswork.
           </h1>
           {showUploader && (
             <p className="text-lg md:text-xl text-gray-300 mb-8 md:mb-10 max-w-2xl mx-auto">
-              Upload your track and get instant, AI-powered insights to elevate your music production.
-              Our sophisticated algorithms analyze your music to provide detailed feedback.
+              Instant feedback to fine-tune your sound. Upload your music and get real-time insight on what’s strong and where to improve.
             </p>
           )}
           

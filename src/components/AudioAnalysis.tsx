@@ -217,25 +217,25 @@ function DetailedAnalysis({ analysis }: { analysis: Analysis }) {
   const sections = [
     {
       title: "Composition",
-      content: analysis.analysis.composition,
+      content: analysis.analysis.composition || '',
       icon: <Music className="w-5 h-5 text-green-400" />
     },
     {
       title: "Production & Mix",
-      content: analysis.analysis.production,
+      content: analysis.analysis.production || '',
       icon: <Waves className="w-5 h-5 text-blue-400" />
     },
     {
       title: "Instrument Interplay",
-      content: analysis.analysis.instrument_interplay,
+      content: analysis.analysis.instrument_interplay || '',
       icon: <Music className="w-5 h-5 text-pink-400" />
     },
     {
       title: analysis.track_type === "Vocal" ? "Lyrics & Delivery" : "Musical Journey",
-      content: analysis.analysis.lyrics,
+      content: analysis.analysis.lyrics || '',
       icon: <Info className="w-5 h-5 text-purple-400" />
     }
-  ];
+  ].filter(section => section.content);
 
   return (
     <Card className="bg-black/40 backdrop-blur-lg border border-[#00fff2]/20 hover:border-[#00fff2]/40 transition-all duration-300 shadow-[0_0_30px_rgba(0,255,242,0.1)] md:col-span-2">
@@ -246,21 +246,19 @@ function DetailedAnalysis({ analysis }: { analysis: Analysis }) {
       </CardHeader>
       <CardContent className="space-y-4">
         {sections.map((section, index) => (
-          section.content && (
-            <motion.div
-              key={section.title}
-              className="p-4 rounded-lg bg-black/40 border border-[#00fff2]/20"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2, delay: index * 0.1 }}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                {section.icon}
-                <h3 className="text-sm font-medium text-[#00fff2]">{section.title}</h3>
-              </div>
-              <p className="text-sm text-[#00fff2]/80 leading-relaxed">{section.content}</p>
-            </motion.div>
-          )
+          <motion.div
+            key={section.title}
+            className="p-4 rounded-lg bg-black/40 border border-[#00fff2]/20"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, delay: index * 0.1 }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              {section.icon}
+              <h3 className="text-sm font-medium text-[#00fff2]">{section.title}</h3>
+            </div>
+            <p className="text-sm text-[#00fff2]/80 leading-relaxed">{section.content}</p>
+          </motion.div>
         ))}
       </CardContent>
     </Card>
