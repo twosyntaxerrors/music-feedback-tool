@@ -166,7 +166,7 @@ export function AudioUploader({ onUploadComplete, onError, onReset }: AudioUploa
                 </div>
                 <div className="flex items-center gap-3 p-3 bg-neutral-800/30 rounded-lg text-sm text-neutral-300">
                   <Loader2 className="h-4 w-4 text-blue-400 animate-spin" />
-                  <span>AI is analyzing your track...</span>
+                  <span>Listening to your music...</span>
                 </div>
               </motion.div>
             )}

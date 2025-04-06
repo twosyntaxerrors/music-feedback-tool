@@ -37,7 +37,8 @@
     "simplex-noise": "^4.0.3",
     "sonner": "^1.7.2",
     "tailwind-merge": "^2.6.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "wavesurfer.js": "^7.9.4"
   },
   "devDependencies": {
     "@types/node": "^20",

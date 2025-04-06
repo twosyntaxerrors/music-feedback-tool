@@ -44,7 +44,7 @@ export function HeroSection({ onUploadComplete, onError, onReset, showUploader =
           </h1>
           {showUploader && (
             <p className="text-lg md:text-xl text-gray-300 mb-8 md:mb-10 max-w-2xl mx-auto">
-              Instant feedback to fine-tune your sound. Upload your music and get real-time insight on what’s strong and where to improve.
+              Instant feedback to fine-tune your sound. Upload your music and get real-time insight and analysis on what’s strong and where to improve.
             </p>
           )}
           

@@ -6,14 +6,14 @@ import { Star } from "lucide-react"
 
 const testimonials = [
   {
-    name: "Sarah Johnson",
+    name: "Leonardo Givenchy",
     role: "Independent Artist",
-    content: "SoundScope AI gave me insights I would have never thought of on my own. It helped me fine-tune my track in ways that really elevated the final mix.",
+    content: "Wild how accurate this is when it breaking my beats down. This is HEAT for improving your sound.",
     avatar: "/avatars/sarah.jpg",
     rating: 5,
   },
   {
-    name: "Mark Rodriguez",
+    name: "Erv Noel",
     role: "Music Producer",
     content: "As a producer, I've tried many analysis tools, but this one stands out. The genre recognition and specific feedback on instrument interplay is spot on.",
     avatar: "/avatars/mark.jpg",

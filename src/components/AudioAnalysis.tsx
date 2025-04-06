@@ -5,7 +5,7 @@ import { Badge } from "./ui/badge";
 import { AlertCircle, CheckCircle, Info, Music, Waves } from "lucide-react";
 import { motion } from "framer-motion";
 import { type Analysis } from "@/types/analysis";
-import { AudioPlayer } from "./AudioPlayer";
+import { WaveformPlayer } from "./WaveformPlayer";
 
 function TrackOverview({ analysis }: { analysis: Analysis }) {
   return (
@@ -328,7 +328,7 @@ export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset }: AudioA
                 <span>{audioFile.name}</span>
                 <span>{(audioFile.size / (1024 * 1024)).toFixed(2)} MB</span>
               </div>
-              <AudioPlayer audioUrl={audioUrl} />
+              <WaveformPlayer audioUrl={audioUrl} />
             </div>
           </CardContent>
         </Card>
