@@ -82,7 +82,7 @@ export const FileUpload = ({
             Upload your audio
           </p>
           <p className="relative z-20 font-sans font-normal text-neutral-400 dark:text-neutral-400 text-base mt-2">
-            Click to upload, or drag and drop your song or beat here (.mp3 or .wav)
+            Click to upload, or drag and drop your music. Max 20MB. MP3 or WAV only.
           </p>
           <div className="relative w-full mt-10 max-w-xl mx-auto">
             {files.length > 0 &&

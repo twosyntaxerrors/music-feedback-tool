@@ -10,7 +10,7 @@ const plans = [
     price: "FREE",
     description: "For serious musicians and producers",
     features: [
-      "50 track analyses per month",
+      /*"50 track analyses per month",*/
       "Advanced genre & influence detection",
       "Detailed performance metrics",
       "Personalized improvement suggestions",
@@ -21,6 +21,13 @@ const plans = [
 ]
 
 export function Pricing() {
+  const scrollToHero = () => {
+    const heroSection = document.getElementById('hero');
+    if (heroSection) {
+      heroSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <section className="py-24 bg-gray-900/50 relative overflow-hidden" id="pricing">
       {/* Gradient background */}
@@ -85,6 +92,7 @@ export function Pricing() {
                 </ul>
                 
                 <Button 
+                  onClick={scrollToHero}
                   className={`w-full ${
                     plan.popular 
                       ? "bg-[#00fff2] hover:bg-[#00c8ff] text-black font-semibold" 

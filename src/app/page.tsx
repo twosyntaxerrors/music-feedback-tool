@@ -10,6 +10,7 @@ import { Footer } from "@/components/footer"
 import { Header } from "@/components/header"
 import { HeroSection } from "@/components/hero-section"
 import { type Analysis } from "@/types/analysis"
+import { FaqSection } from "@/components/ui/faq-section"
 
 export default function AIAudioAnalysisLanding() {
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
@@ -110,6 +111,10 @@ export default function AIAudioAnalysisLanding() {
         
         <div id="pricing">
           <Pricing />
+        </div>
+
+        <div id="faq">
+          <FaqSection />
         </div>
       </main>
 

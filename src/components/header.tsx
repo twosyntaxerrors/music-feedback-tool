@@ -28,6 +28,10 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   {
+    title: "Upload",
+    scrollTo: "hero",
+  },
+  {
     title: "Features",
     scrollTo: "features",
   },
@@ -38,6 +42,10 @@ const navItems: NavItem[] = [
   {
     title: "Pricing",
     scrollTo: "pricing",
+  },
+  {
+    title: "FAQ",
+    scrollTo: "faq",
   },
 ];
 

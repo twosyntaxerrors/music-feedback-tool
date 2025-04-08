@@ -19,7 +19,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-gray-400 max-w-md mb-4">
-              Elevate your music with audio analysis. Get detailed insights and recommendations to take your production to the next level.
+              Elevate your music with audio analysis. Get detailed insights and recommendations to take your music to the next level.
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-[#00fff2] transition-colors">
@@ -45,8 +45,8 @@ export function Footer() {
             <ul className="space-y-2">
               <li><Link href="#features" className="text-gray-400 hover:text-[#00fff2] transition-colors">Features</Link></li>
               <li><Link href="#pricing" className="text-gray-400 hover:text-[#00fff2] transition-colors">Pricing</Link></li>
-              <li><Link href="#" className="text-gray-400 hover:text-[#00fff2] transition-colors">API</Link></li>
-              <li><Link href="#" className="text-gray-400 hover:text-[#00fff2] transition-colors">Integrations</Link></li>
+              {/* <li><Link href="#" className="text-gray-400 hover:text-[#00fff2] transition-colors">API</Link></li> */}
+              {/* <li><Link href="#" className="text-gray-400 hover:text-[#00fff2] transition-colors">Integrations</Link></li>  */}
             </ul>
           </div>
           
@@ -55,7 +55,7 @@ export function Footer() {
             <ul className="space-y-2">
               <li><Link href="#" className="text-gray-400 hover:text-[#00fff2] transition-colors">Documentation</Link></li>
               <li><Link href="#" className="text-gray-400 hover:text-[#00fff2] transition-colors">Guides</Link></li>
-              <li><Link href="#" className="text-gray-400 hover:text-[#00fff2] transition-colors">Blog</Link></li>
+              {/* <li><Link href="#" className="text-gray-400 hover:text-[#00fff2] transition-colors">Blog</Link></li> */}
               <li><Link href="#" className="text-gray-400 hover:text-[#00fff2] transition-colors">Support</Link></li>
             </ul>
           </div>
@@ -64,7 +64,7 @@ export function Footer() {
             <h3 className="font-righteous text-[#00fff2] mb-4">Company</h3>
             <ul className="space-y-2">
               <li><Link href="#" className="text-gray-400 hover:text-[#00fff2] transition-colors">About</Link></li>
-              <li><Link href="#" className="text-gray-400 hover:text-[#00fff2] transition-colors">Careers</Link></li>
+              {/* <li><Link href="#" className="text-gray-400 hover:text-[#00fff2] transition-colors">Careers</Link></li> */}
               <li><Link href="#" className="text-gray-400 hover:text-[#00fff2] transition-colors">Privacy</Link></li>
               <li><Link href="#" className="text-gray-400 hover:text-[#00fff2] transition-colors">Terms</Link></li>
             </ul>

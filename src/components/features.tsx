@@ -7,32 +7,32 @@ export function Features() {
   const features = [
     {
       title: "Smart Analytics",
-      description: "Our advanced algorithm breaks down your track to identify strengths and areas for improvement.",
+      description: "Breaks down your track to spot muddy lows, clashing melodies, or overworked drums.",
       icon: <Bot className="w-10 h-10 text-[#00fff2]" />,
     },
     {
       title: "Genre Recognition",
-      description: "Automatically identify your track's primary genre and musical influences.",
+      description: "Detects your track’s genre and highlights subtle influences like lo-fi or trap.",
       icon: <Music className="w-10 h-10 text-[#00fff2]" />,
     },
     {
       title: "Performance Metrics",
-      description: "Get quantitative scores for melody, harmony, rhythm, and production quality.",
+      description: "Scores your mix, melody, rhythm, and harmony to show where you’re strong or slipping.",
       icon: <BarChart3 className="w-10 h-10 text-[#00fff2]" />,
     },
     {
       title: "Detailed Feedback",
-      description: "Receive specific, actionable insights on composition, arrangement, and production techniques.",
+      description: "Get precise tips like “lower reverb” or “tighten your snare timing” to improve your mix.",
       icon: <Ear className="w-10 h-10 text-[#00fff2]" />,
     },
     {
       title: "Instant Results",
-      description: "No waiting. Get comprehensive analysis in seconds, not hours or days.",
+      description: "Upload and get real feedback in seconds. No delays, no waiting on a second opinion.",
       icon: <Zap className="w-10 h-10 text-[#00fff2]" />,
     },
     {
       title: "Music Enhancement",
-      description: "Get personalized suggestions to take your music to the next level.",
+      description: "Get suggestions to sharpen your sound, structure your song, and finish with confidence.",
       icon: <Wand2 className="w-10 h-10 text-[#00fff2]" />,
     },
   ]
