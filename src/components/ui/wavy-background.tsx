@@ -1,6 +1,6 @@
 "use client";
 import { cn } from "@/lib/utils";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { createNoise3D } from "simplex-noise";
 
 export const WavyBackground = ({
@@ -46,7 +46,9 @@ export const WavyBackground = ({
     }
   };
 
-  const init = () => {
+  const animationFrameId = useRef<number>();
+
+  const init = useCallback(() => {
     canvas = canvasRef.current;
     ctx = canvas.getContext("2d");
     w = ctx.canvas.width = window.innerWidth;
@@ -59,7 +61,7 @@ export const WavyBackground = ({
       ctx.filter = `blur(${blur}px)`;
     };
     render();
-  };
+  }, []);
 
   const waveColors = colors ?? [
     "#38bdf8",
@@ -95,9 +97,11 @@ export const WavyBackground = ({
   useEffect(() => {
     init();
     return () => {
-      cancelAnimationFrame(animationId);
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current);
+      }
     };
-  }, []);
+  }, [init]);
 
   const [isSafari, setIsSafari] = useState(false);
   useEffect(() => {

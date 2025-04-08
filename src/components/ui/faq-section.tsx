@@ -112,7 +112,7 @@ export function FaqSection() {
               Still have questions?
             </p>
             <p className="text-sm text-gray-400 mb-4">
-              We're here to help! Reach out to our support team for assistance.
+              We&apos;re here to help! Reach out to our support team for assistance.
             </p>
             <Button 
               size="sm" 
