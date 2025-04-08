@@ -27,14 +27,12 @@ export const WavyBackground = ({
   [key: string]: any;
 }) => {
   const noise = createNoise3D();
-  let w: number,
-    h: number,
-    nt: number,
-    i: number,
-    x: number,
-    ctx: any,
-    canvas: any;
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
+  const dimensionsRef = useRef({ w: 0, h: 0 });
+  const ntRef = useRef(0);
+  const animationFrameId = useRef<number>();
+
   const getSpeed = () => {
     switch (speed) {
       case "slow":
@@ -46,22 +44,28 @@ export const WavyBackground = ({
     }
   };
 
-  const animationFrameId = useRef<number>();
-
   const init = useCallback(() => {
-    canvas = canvasRef.current;
-    ctx = canvas.getContext("2d");
-    w = ctx.canvas.width = window.innerWidth;
-    h = ctx.canvas.height = window.innerHeight;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctxRef.current = ctx;
+    dimensionsRef.current.w = ctx.canvas.width = window.innerWidth;
+    dimensionsRef.current.h = ctx.canvas.height = window.innerHeight;
     ctx.filter = `blur(${blur}px)`;
-    nt = 0;
+    ntRef.current = 0;
+
     window.onresize = function () {
-      w = ctx.canvas.width = window.innerWidth;
-      h = ctx.canvas.height = window.innerHeight;
+      if (!ctx) return;
+      dimensionsRef.current.w = ctx.canvas.width = window.innerWidth;
+      dimensionsRef.current.h = ctx.canvas.height = window.innerHeight;
       ctx.filter = `blur(${blur}px)`;
     };
+
     render();
-  }, []);
+  }, [blur]);
 
   const waveColors = colors ?? [
     "#38bdf8",
@@ -70,35 +74,45 @@ export const WavyBackground = ({
     "#e879f9",
     "#22d3ee",
   ];
-  const drawWave = (n: number) => {
-    nt += getSpeed();
-    for (i = 0; i < n; i++) {
+
+  const drawWave = useCallback((n: number) => {
+    const ctx = ctxRef.current;
+    if (!ctx) return;
+
+    ntRef.current += getSpeed();
+    const { w, h } = dimensionsRef.current;
+
+    for (let i = 0; i < n; i++) {
       ctx.beginPath();
       ctx.lineWidth = waveWidth || 50;
       ctx.strokeStyle = waveColors[i % waveColors.length];
-      for (x = 0; x < w; x += 5) {
-        var y = noise(x / 800, 0.3 * i, nt) * 100;
-        ctx.lineTo(x, y + h * 0.5); // adjust for height, currently at 50% of the container
+      for (let x = 0; x < w; x += 5) {
+        const y = noise(x / 800, 0.3 * i, ntRef.current) * 100;
+        ctx.lineTo(x, y + h * 0.5);
       }
       ctx.stroke();
       ctx.closePath();
     }
-  };
+  }, [noise, waveWidth, waveColors, getSpeed]);
 
-  let animationId: number;
-  const render = () => {
+  const render = useCallback(() => {
+    const ctx = ctxRef.current;
+    if (!ctx) return;
+
+    const { w, h } = dimensionsRef.current;
     ctx.fillStyle = backgroundFill || "black";
     ctx.globalAlpha = waveOpacity || 0.5;
     ctx.fillRect(0, 0, w, h);
     drawWave(5);
-    animationId = requestAnimationFrame(render);
-  };
+    animationFrameId.current = requestAnimationFrame(render);
+  }, [backgroundFill, waveOpacity, drawWave]);
 
   useEffect(() => {
     init();
     return () => {
-      if (animationFrameId.current) {
-        cancelAnimationFrame(animationFrameId.current);
+      const id = animationFrameId.current;
+      if (id) {
+        cancelAnimationFrame(id);
       }
     };
   }, [init]);
