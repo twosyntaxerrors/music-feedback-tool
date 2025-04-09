@@ -23,7 +23,7 @@ export function HeroSection({ onUploadComplete, onError, onReset, showUploader =
       <div className="absolute top-20 -right-40 w-80 h-80 bg-[#00fff2] rounded-full mix-blend-screen filter blur-[100px] opacity-10 animate-blob animation-delay-4000"></div>
       
       {/* Content */}
-      <div className="container mx-auto px-4 text-center relative z-10">
+      <div className="container mx-auto px-4 text-center relative z-10 mt-20 md:mt-0">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -35,7 +35,7 @@ export function HeroSection({ onUploadComplete, onError, onReset, showUploader =
               href="https://www.ervnoel.com"
               text="Instant Access to 300+ Fire Beats! Click Here"
               variant="outline"
-              className="bg-black/40 border-[#00fff2]/40 hover:border-[#00fff2] text-[#00fff2] hover:bg-black/60"
+              className="bg-black/40 border-[#00fff2]/40 hover:border-[#00fff2] text-[#00fff2] hover:bg-black/60 cursor-pointer"
               icon={<Flame className="w-4 h-4 text-orange-500 fill-orange-500" />}
               target="_blank"
             />
