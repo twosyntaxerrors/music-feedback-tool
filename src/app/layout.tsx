@@ -11,7 +11,7 @@ const righteous = Righteous({
 });
 
 export const metadata: Metadata = {
-  title: "Audio Analysis with Gemini AI",
+  title: "Soundscope",
   description: "Get detailed analysis of your audio files using Gemini AI",
 };
 

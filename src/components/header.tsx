@@ -95,7 +95,7 @@ export function Header() {
               }}
             >
               <span className="text-2xl font-righteous bg-clip-text text-transparent bg-gradient-to-r from-[#00fff2] to-[#00c8ff] drop-shadow-[0_0_10px_rgba(0,255,242,0.3)]">
-                SoundScope AI
+                SoundScope
               </span>
             </Link>
           </motion.div>

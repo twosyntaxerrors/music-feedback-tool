@@ -15,7 +15,7 @@ export function Footer() {
           <div className="lg:col-span-2">
             <Link href="/" className="inline-block mb-4">
               <span className="text-2xl font-righteous bg-clip-text text-transparent bg-gradient-to-r from-[#00fff2] to-[#00c8ff] drop-shadow-[0_0_10px_rgba(0,255,242,0.3)]">
-                SoundScope AI
+                SoundScope
               </span>
             </Link>
             <p className="text-gray-400 max-w-md mb-4">
