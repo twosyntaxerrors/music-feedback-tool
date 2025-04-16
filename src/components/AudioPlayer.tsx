@@ -71,29 +71,29 @@ export function AudioPlayer({ audioUrl }: AudioPlayerProps) {
   };
 
   return (
-    <div className="relative w-full h-24 rounded-xl overflow-hidden bg-gradient-to-r from-gray-900 via-blue-900/20 to-gray-900 backdrop-blur-sm border border-white/10">
+    <div className="relative w-full h-24 rounded-xl overflow-hidden bg-black/40 backdrop-blur-sm border border-white/10">
       <div className="absolute inset-0 flex flex-col justify-between p-4">
         <div className="flex items-center justify-between">
           <Button
             onClick={togglePlayPause}
             variant="ghost"
             size="icon"
-            className="h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 text-white"
+            className="h-10 w-10 rounded-full bg-white/5 hover:bg-white/10 text-white"
           >
             {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
           </Button>
           
-          <div className="text-sm text-white/80 px-2 py-1 rounded bg-black/20">
+          <div className="text-sm text-white/80 px-2 py-1 rounded bg-black/40">
             {formatTime(currentTime)} / {formatTime(duration)}
           </div>
         </div>
 
         <div 
-          className="h-1.5 w-full bg-white/20 rounded-full cursor-pointer overflow-hidden"
+          className="h-1.5 w-full bg-white/10 rounded-full cursor-pointer overflow-hidden"
           onClick={handleProgressClick}
         >
           <div 
-            className="h-full bg-blue-500/80 rounded-full transition-all duration-150"
+            className="h-full bg-white/80 rounded-full transition-all duration-150"
             style={{ width: `${(currentTime / duration) * 100}%` }}
           />
         </div>

@@ -142,9 +142,12 @@ export function AudioUploader({ onUploadComplete, onError, onReset }: AudioUploa
                 <Button
                   onClick={uploadFile}
                   disabled={uploading}
-                  className="w-full bg-blue-600 hover:bg-blue-500 text-white transition-colors disabled:opacity-50"
+                  className="relative inline-flex h-12 overflow-hidden rounded-md p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50 w-full justify-center"
                 >
-                  Analyze Audio
+                  <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#FFFFFF_0%,#000000_50%,#FFFFFF_100%)]" />
+                  <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-md bg-black px-3 py-1 text-sm font-medium text-white backdrop-blur-3xl">
+                    Analyze Audio
+                  </span>
                 </Button>
               </>
             ) : (

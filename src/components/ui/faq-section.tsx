@@ -1,15 +1,6 @@
 "use client";
 
-import * as React from "react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { FaqSectionWithCategories } from "./faq-with-categories";
 
 const FAQ_ITEMS = [
   {
@@ -34,7 +25,7 @@ const FAQ_ITEMS = [
   },
   {
     question: "How long does the analysis take?",
-    answer: "The analysis typically takes just a few seconds to complete. The exact time depends on the length of your track and the current server load, but you'll usually receive your detailed feedback within 15 seconds of uploading.",
+    answer: "The analysis typically takes a few seconds to first listen. The exact time depends on the length of your track and the current server load, but you'll usually receive your detailed feedback within 25 seconds of uploading.",
     category: "Performance"
   },
   {
@@ -51,79 +42,17 @@ const FAQ_ITEMS = [
 
 export function FaqSection() {
   return (
-    <section className="py-24 bg-gray-900/50 relative overflow-hidden">
-      {/* Gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-gray-900/0 via-[#00fff2]/5 to-gray-900/0 pointer-events-none" />
-      
-      <div className="container mx-auto px-4">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center space-y-4 mb-12">
-            <h2 className="text-3xl md:text-4xl font-righteous mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#00fff2] to-[#00c8ff] drop-shadow-[0_0_10px_rgba(0,255,242,0.3)]">
-              Frequently Asked Questions
-            </h2>
-            <p className="text-xl text-gray-300">
-              Find answers to common questions about our music analysis service
-            </p>
-          </div>
-
-          <Accordion type="single" collapsible className="space-y-4">
-            {FAQ_ITEMS.map((item, index) => (
-              <AccordionItem
-                key={index}
-                value={`item-${index}`}
-                className={cn(
-                  "mb-4 rounded-xl",
-                  "backdrop-blur-sm bg-gray-800/30",
-                  "border border-gray-700 hover:border-[#00fff2]/40",
-                  "transition-all duration-300 group"
-                )}
-              >
-                <AccordionTrigger 
-                  className={cn(
-                    "px-6 py-4 text-left hover:no-underline",
-                    "data-[state=open]:border-b data-[state=open]:border-[#00fff2]/20"
-                  )}
-                >
-                  <div className="flex flex-col gap-2">
-                    {item.category && (
-                      <Badge
-                        variant="secondary"
-                        className="w-fit text-xs font-normal bg-[#00fff2]/10 text-[#00fff2] border-[#00fff2]/20"
-                      >
-                        {item.category}
-                      </Badge>
-                    )}
-                    <h3 className="text-lg font-medium text-gray-100 group-hover:text-[#00fff2] transition-colors">
-                      {item.question}
-                    </h3>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-6 pt-4 pb-6">
-                  <p className="text-gray-300 leading-relaxed">
-                    {item.answer}
-                  </p>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-
-          <div className="mt-12 text-center">
-            <p className="text-gray-300 mb-4">
-              Still have questions?
-            </p>
-            <p className="text-sm text-gray-400 mb-4">
-              We&apos;re here to help! Reach out to our support team for assistance.
-            </p>
-            <Button 
-              size="sm" 
-              onClick={() => window.location.href = '/contact'}
-              className="bg-[#00fff2] hover:bg-[#00c8ff] text-black font-semibold"
-            >
-              Contact Support
-            </Button>
-          </div>
-        </div>
-      </div>
-    </section>
+    <FaqSectionWithCategories
+      id="faq"
+      title="Frequently Asked Questions"
+      description="Find answers to common questions about our music analysis service"
+      items={FAQ_ITEMS}
+      contactInfo={{
+        title: "Still have questions?",
+        description: "Feel free to reach out to me directly via email.",
+        buttonText: "Email Me",
+        onContact: () => window.location.href = 'mailto:ervnoelproduction@gmail.com'
+      }}
+    />
   );
 } 

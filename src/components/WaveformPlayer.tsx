@@ -27,21 +27,21 @@ export function WaveformPlayer({ audioUrl }: WaveformPlayerProps) {
 
     // Define the waveform gradient
     const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height * 1.35);
-    gradient.addColorStop(0, '#656666');
-    gradient.addColorStop((canvas.height * 0.7) / canvas.height, '#656666');
-    gradient.addColorStop((canvas.height * 0.7 + 1) / canvas.height, '#ffffff');
-    gradient.addColorStop((canvas.height * 0.7 + 2) / canvas.height, '#ffffff');
-    gradient.addColorStop((canvas.height * 0.7 + 3) / canvas.height, '#B1B1B1');
-    gradient.addColorStop(1, '#B1B1B1');
+    gradient.addColorStop(0, '#333333');
+    gradient.addColorStop((canvas.height * 0.7) / canvas.height, '#333333');
+    gradient.addColorStop((canvas.height * 0.7 + 1) / canvas.height, '#444444');
+    gradient.addColorStop((canvas.height * 0.7 + 2) / canvas.height, '#444444');
+    gradient.addColorStop((canvas.height * 0.7 + 3) / canvas.height, '#333333');
+    gradient.addColorStop(1, '#333333');
 
     // Define the progress gradient
     const progressGradient = ctx.createLinearGradient(0, 0, 0, canvas.height * 1.35);
-    progressGradient.addColorStop(0, '#00fff2');
-    progressGradient.addColorStop((canvas.height * 0.7) / canvas.height, '#00c8ff');
+    progressGradient.addColorStop(0, '#ffffff');
+    progressGradient.addColorStop((canvas.height * 0.7) / canvas.height, '#ffffff');
     progressGradient.addColorStop((canvas.height * 0.7 + 1) / canvas.height, '#ffffff');
     progressGradient.addColorStop((canvas.height * 0.7 + 2) / canvas.height, '#ffffff');
-    progressGradient.addColorStop((canvas.height * 0.7 + 3) / canvas.height, '#00fff2');
-    progressGradient.addColorStop(1, '#00c8ff');
+    progressGradient.addColorStop((canvas.height * 0.7 + 3) / canvas.height, '#ffffff');
+    progressGradient.addColorStop(1, '#ffffff');
 
     // Create wavesurfer instance
     const wavesurfer = WaveSurfer.create({
@@ -104,18 +104,18 @@ export function WaveformPlayer({ audioUrl }: WaveformPlayerProps) {
   };
 
   return (
-    <div className="relative w-full rounded-xl overflow-hidden bg-gradient-to-r from-gray-900 via-blue-900/20 to-gray-900 backdrop-blur-sm border border-white/10 p-3">
+    <div className="relative w-full rounded-xl overflow-hidden bg-black/80 backdrop-blur-sm border border-white/10 p-3">
       <div className="flex items-center gap-3 mb-3">
         <Button
           onClick={togglePlayPause}
           variant="ghost"
           size="icon"
-          className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white"
+          className="h-8 w-8 rounded-full bg-white/5 hover:bg-white/10 text-white"
         >
           {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
         </Button>
         
-        <div className="text-xs text-white/80 px-2 py-0.5 rounded bg-black/20">
+        <div className="text-xs text-white/80 px-2 py-0.5 rounded bg-black/40">
           {currentTime} / {duration}
         </div>
       </div>

@@ -6,19 +6,29 @@ import { AlertCircle, CheckCircle, Info, Music, Waves } from "lucide-react";
 import { motion } from "framer-motion";
 import { type Analysis } from "@/types/analysis";
 import { WaveformPlayer } from "./WaveformPlayer";
+import { GlowingEffect } from "./ui/glowing-effect";
 
 function TrackOverview({ analysis }: { analysis: Analysis }) {
   return (
-    <Card className="bg-black/40 backdrop-blur-lg border border-[#00fff2]/20 hover:border-[#00fff2]/40 transition-all duration-300 shadow-[0_0_30px_rgba(0,255,242,0.1)]">
+    <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300 relative">
+      <GlowingEffect
+        blur={0}
+        borderWidth={1}
+        spread={80}
+        glow={true}
+        disabled={false}
+        proximity={64}
+        inactiveZone={0.01}
+      />
       <CardHeader className="pb-4">
-        <CardTitle className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#00fff2] to-[#00c8ff]">
+        <CardTitle className="text-xl font-bold text-white">
           Track Overview
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           <div>
-            <h3 className="text-sm font-medium mb-2 text-[#00fff2]">Genre & Type</h3>
+            <h3 className="text-sm font-medium mb-2 text-white">Genre & Type</h3>
             <div className="flex flex-wrap gap-2">
               <Badge variant="secondary" className="bg-black/40 border border-blue-400/40 text-blue-400 hover:bg-black/60 hover:border-blue-400">
                 {analysis.primary_genre || 'Unknown Genre'}
@@ -33,7 +43,7 @@ function TrackOverview({ analysis }: { analysis: Analysis }) {
           
           {analysis.secondary_influences && analysis.secondary_influences.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium mb-2 text-[#00fff2]">Musical Influences</h3>
+              <h3 className="text-sm font-medium mb-2 text-white">Musical Influences</h3>
               <div className="flex flex-wrap gap-2">
                 {analysis.secondary_influences.map((influence, i) => (
                   <Badge
@@ -50,7 +60,7 @@ function TrackOverview({ analysis }: { analysis: Analysis }) {
 
           {analysis.key_instruments && analysis.key_instruments.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium mb-2 text-[#00fff2]">Key Instruments</h3>
+              <h3 className="text-sm font-medium mb-2 text-white">Key Instruments</h3>
               <div className="flex flex-wrap gap-2">
                 {analysis.key_instruments.map((instrument, i) => (
                   <Badge
@@ -67,7 +77,7 @@ function TrackOverview({ analysis }: { analysis: Analysis }) {
 
           {analysis.mood_tags && analysis.mood_tags.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium mb-2 text-[#00fff2]">Mood</h3>
+              <h3 className="text-sm font-medium mb-2 text-white">Mood</h3>
               <div className="flex flex-wrap gap-2">
                 {analysis.mood_tags.map((tag, i) => (
                   <Badge
@@ -92,10 +102,10 @@ function MetricGauge({ name, score, rating, color }: { name: string; score: numb
     <div className="mb-4 last:mb-0">
       <div className="flex justify-between items-center mb-2">
         <div>
-          <div className="text-sm font-medium text-[#00fff2]">{name}</div>
-          <div className="text-xs text-[#00fff2]/60">{rating}</div>
+          <div className="text-sm font-medium text-white">{name}</div>
+          <div className="text-xs text-white/60">{rating}</div>
         </div>
-        <div className="text-lg font-bold text-[#00fff2]">{score}%</div>
+        <div className="text-lg font-bold text-white">{score}%</div>
       </div>
       <div className="h-2 bg-black/40 rounded-full overflow-hidden">
         <motion.div
@@ -131,7 +141,7 @@ function PerformanceMetrics({ analysis }: { analysis: Analysis }) {
 
     return { 
       rating, 
-      color: colors[metricName as keyof typeof colors] || 'bg-[#00fff2]'
+      color: colors[metricName as keyof typeof colors] || 'bg-white'
     };
   };
 
@@ -146,9 +156,18 @@ function PerformanceMetrics({ analysis }: { analysis: Analysis }) {
   }) : [];
 
   return (
-    <Card className="bg-black/40 backdrop-blur-lg border border-[#00fff2]/20 hover:border-[#00fff2]/40 transition-all duration-300 shadow-[0_0_30px_rgba(0,255,242,0.1)]">
+    <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300 relative">
+      <GlowingEffect
+        blur={0}
+        borderWidth={1}
+        spread={80}
+        glow={true}
+        disabled={false}
+        proximity={64}
+        inactiveZone={0.01}
+      />
       <CardHeader className="pb-4">
-        <CardTitle className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#00fff2] to-[#00c8ff]">
+        <CardTitle className="text-xl font-bold text-white">
           Performance Metrics
         </CardTitle>
       </CardHeader>
@@ -183,13 +202,22 @@ function KeyInsights({ analysis }: { analysis: Analysis }) {
   const iconMap = {
     positive: <CheckCircle className="w-4 h-4 text-green-500" />,
     negative: <AlertCircle className="w-4 h-4 text-red-500" />,
-    info: <Info className="w-4 h-4 text-[#00fff2]" />,
+    info: <Info className="w-4 h-4 text-white" />,
   };
 
   return (
-    <Card className="bg-black/40 backdrop-blur-lg border border-[#00fff2]/20 hover:border-[#00fff2]/40 transition-all duration-300 shadow-[0_0_30px_rgba(0,255,242,0.1)] md:col-span-2">
+    <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300 relative md:col-span-2">
+      <GlowingEffect
+        blur={0}
+        borderWidth={1}
+        spread={80}
+        glow={true}
+        disabled={false}
+        proximity={64}
+        inactiveZone={0.01}
+      />
       <CardHeader className="pb-4">
-        <CardTitle className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#00fff2] to-[#00c8ff]">
+        <CardTitle className="text-xl font-bold text-white">
           Key Insights
         </CardTitle>
       </CardHeader>
@@ -197,13 +225,13 @@ function KeyInsights({ analysis }: { analysis: Analysis }) {
         {insights.map((insight, index) => (
           <motion.div
             key={index}
-            className="flex items-start p-2 rounded-lg bg-black/40 border border-[#00fff2]/20"
+            className="flex items-start p-2 rounded-lg bg-black/40 border border-white/20"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, delay: index * 0.05 }}
           >
             <div className="mr-3 mt-1">{iconMap[insight.type as keyof typeof iconMap]}</div>
-            <p className="text-sm text-[#00fff2]/90">{insight.content}</p>
+            <p className="text-sm text-white/90">{insight.content}</p>
           </motion.div>
         ))}
       </CardContent>
@@ -238,9 +266,18 @@ function DetailedAnalysis({ analysis }: { analysis: Analysis }) {
   ].filter(section => section.content);
 
   return (
-    <Card className="bg-black/40 backdrop-blur-lg border border-[#00fff2]/20 hover:border-[#00fff2]/40 transition-all duration-300 shadow-[0_0_30px_rgba(0,255,242,0.1)] md:col-span-2">
+    <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300 relative md:col-span-2">
+      <GlowingEffect
+        blur={0}
+        borderWidth={1}
+        spread={80}
+        glow={true}
+        disabled={false}
+        proximity={64}
+        inactiveZone={0.01}
+      />
       <CardHeader className="pb-4">
-        <CardTitle className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#00fff2] to-[#00c8ff]">
+        <CardTitle className="text-xl font-bold text-white">
           Detailed Analysis
         </CardTitle>
       </CardHeader>
@@ -248,16 +285,16 @@ function DetailedAnalysis({ analysis }: { analysis: Analysis }) {
         {sections.map((section, index) => (
           <motion.div
             key={section.title}
-            className="p-4 rounded-lg bg-black/40 border border-[#00fff2]/20"
+            className="p-4 rounded-lg bg-black/40 border border-white/20"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, delay: index * 0.1 }}
           >
             <div className="flex items-center gap-2 mb-2">
               {section.icon}
-              <h3 className="text-sm font-medium text-[#00fff2]">{section.title}</h3>
+              <h3 className="text-sm font-medium text-white">{section.title}</h3>
             </div>
-            <p className="text-sm text-[#00fff2]/80 leading-relaxed">{section.content}</p>
+            <p className="text-sm text-white/80 leading-relaxed">{section.content}</p>
           </motion.div>
         ))}
       </CardContent>
@@ -275,22 +312,22 @@ interface AudioAnalysisProps {
 export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset }: AudioAnalysisProps) {
   if (analysis.error) {
     return (
-      <Card className="bg-black/40 backdrop-blur-lg border border-[#00fff2]/20 hover:border-[#00fff2]/40 transition-all duration-300 shadow-[0_0_30px_rgba(0,255,242,0.1)]">
+      <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300">
         <CardContent className="p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-[#00fff2]">Analysis Error</h2>
+            <h2 className="text-xl font-bold text-white">Analysis Error</h2>
             {onReset && (
               <button 
                 onClick={onReset}
-                className="px-3 py-1 text-sm bg-black/40 border border-[#00fff2]/40 hover:border-[#00fff2] text-[#00fff2] rounded-md transition-colors"
+                className="px-3 py-1 text-sm bg-black/40 border border-white/40 hover:border-white text-white rounded-md transition-colors"
               >
                 Try Again
               </button>
             )}
           </div>
-          <p className="text-[#00fff2]/80">{analysis.error}</p>
+          <p className="text-white/80">{analysis.error}</p>
           {analysis.details && (
-            <pre className="mt-4 p-4 bg-black/40 border border-[#00fff2]/20 rounded text-sm text-[#00fff2]/60 overflow-auto">
+            <pre className="mt-4 p-4 bg-black/40 border border-white/20 rounded text-sm text-white/60 overflow-auto">
               {analysis.details}
             </pre>
           )}
@@ -302,29 +339,41 @@ export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset }: AudioA
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#00fff2] to-[#00c8ff]">
+        <h2 className="text-2xl font-bold text-white">
           Analysis Results
         </h2>
         {onReset && (
           <button 
             onClick={onReset}
-            className="px-4 py-2 bg-black/40 border border-[#00fff2]/40 hover:border-[#00fff2] text-[#00fff2] rounded-md transition-colors"
+            className="relative inline-flex h-12 overflow-hidden rounded-md p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50"
           >
-            New Analysis
+            <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)]" />
+            <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-md bg-slate-950 px-3 py-1 text-sm font-medium text-white backdrop-blur-3xl">
+              New Analysis
+            </span>
           </button>
         )}
       </div>
 
       {audioFile && audioUrl && (
-        <Card className="bg-black/40 backdrop-blur-lg border border-[#00fff2]/20 hover:border-[#00fff2]/40 transition-all duration-300 shadow-[0_0_30px_rgba(0,255,242,0.1)]">
+        <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300 relative">
+          <GlowingEffect
+            blur={0}
+            borderWidth={1}
+            spread={80}
+            glow={true}
+            disabled={false}
+            proximity={64}
+            inactiveZone={0.01}
+          />
           <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#00fff2] to-[#00c8ff]">
+            <CardTitle className="text-xl font-bold text-white">
               Analyzed Track
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between text-sm text-[#00fff2]/60">
+              <div className="flex items-center justify-between text-sm text-white/60">
                 <span>{audioFile.name}</span>
                 <span>{(audioFile.size / (1024 * 1024)).toFixed(2)} MB</span>
               </div>

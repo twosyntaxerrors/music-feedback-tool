@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { motion, useScroll, useSpring } from "framer-motion"
 import { AudioAnalysis } from "@/components/AudioAnalysis"
 import { Features } from "@/components/features"
-import { Testimonials } from "@/components/testimonials"
+import { TestimonialsComponent } from "@/components/testimonials"
 import { Pricing } from "@/components/pricing"
 import { Footer } from "@/components/footer"
 import { Header } from "@/components/header"
@@ -75,22 +75,24 @@ export default function AIAudioAnalysisLanding() {
 
   return (
     <div className="min-h-screen bg-black text-gray-100 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_var(--mouse-x)_var(--mouse-y),rgba(0,255,242,0.08),transparent_50%)] pointer-events-none" />
-      <motion.div className="fixed top-0 left-0 right-0 h-0.5 bg-[#00fff2] origin-left z-50 shadow-[0_0_10px_#00fff2]" style={{ scaleX }} />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_var(--mouse-x)_var(--mouse-y),rgba(255,255,255,0.03),transparent_50%)] pointer-events-none" />
+      <motion.div className="fixed top-0 left-0 right-0 h-0.5 bg-white/20 origin-left z-50 shadow-[0_0_10px_rgba(255,255,255,0.1)]" style={{ scaleX }} />
       
       <Header />
 
-      <main>
-        <HeroSection 
-          onUploadComplete={handleAnalysisComplete}
-          onError={handleError}
-          onReset={handleReset}
-          showUploader={!analysis && !error}
-        />
+      <main className="flex flex-col w-full">
+        {!analysis && !error && (
+          <HeroSection 
+            onUploadComplete={handleAnalysisComplete}
+            onError={handleError}
+            onReset={handleReset}
+            showUploader={true}
+          />
+        )}
 
         {(analysis || error) && (
           <motion.section
-            className="analysis pt-4 pb-20"
+            className="pt-32 pb-20"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
@@ -101,21 +103,25 @@ export default function AIAudioAnalysisLanding() {
           </motion.section>
         )}
 
-        <div id="features">
-          <Features />
-        </div>
-        
-        <div id="testimonials">
-          <Testimonials />
-        </div>
-        
-        <div id="pricing">
-          <Pricing />
-        </div>
+        {!analysis && !error && (
+          <>
+            <section id="features" className="w-full">
+              <Features />
+            </section>
+            
+            {/* <section id="testimonials" className="w-full">
+              <TestimonialsComponent />
+            </section>
+            
+            <section id="pricing" className="w-full">
+              <Pricing />
+            </section> */}
 
-        <div id="faq">
-          <FaqSection />
-        </div>
+            <section id="faq" className="w-full">
+              <FaqSection />
+            </section>
+          </>
+        )}
       </main>
 
       <Footer />
