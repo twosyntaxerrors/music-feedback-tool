@@ -11,6 +11,7 @@ import { Header } from "@/components/header"
 import { HeroSection } from "@/components/hero-section"
 import { type Analysis } from "@/types/analysis"
 import { FaqSection } from "@/components/ui/faq-section"
+import { ApiQuotaProvider } from "@/lib/contexts/ApiQuotaContext"
 
 export default function AIAudioAnalysisLanding() {
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
@@ -74,58 +75,60 @@ export default function AIAudioAnalysisLanding() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-gray-100 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_var(--mouse-x)_var(--mouse-y),rgba(255,255,255,0.03),transparent_50%)] pointer-events-none" />
-      <motion.div className="fixed top-0 left-0 right-0 h-0.5 bg-white/20 origin-left z-50 shadow-[0_0_10px_rgba(255,255,255,0.1)]" style={{ scaleX }} />
-      
-      <Header />
+    <ApiQuotaProvider>
+      <div className="min-h-screen bg-black text-gray-100 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_var(--mouse-x)_var(--mouse-y),rgba(255,255,255,0.03),transparent_50%)] pointer-events-none" />
+        <motion.div className="fixed top-0 left-0 right-0 h-0.5 bg-white/20 origin-left z-50 shadow-[0_0_10px_rgba(255,255,255,0.1)]" style={{ scaleX }} />
+        
+        <Header />
 
-      <main className="flex flex-col w-full">
-        {!analysis && !error && (
-          <HeroSection 
-            onUploadComplete={handleAnalysisComplete}
-            onError={handleError}
-            onReset={handleReset}
-            showUploader={true}
-          />
-        )}
+        <main className="flex flex-col w-full">
+          {!analysis && !error && (
+            <HeroSection 
+              onUploadComplete={handleAnalysisComplete}
+              onError={handleError}
+              onReset={handleReset}
+              showUploader={true}
+            />
+          )}
 
-        {(analysis || error) && (
-          <motion.section
-            className="pt-32 pb-20"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="container mx-auto px-4">
-              {analysis && <AudioAnalysis analysis={analysis} audioFile={audioFile} audioUrl={audioUrl} onReset={handleReset} />}
-            </div>
-          </motion.section>
-        )}
+          {(analysis || error) && (
+            <motion.section
+              className="pt-32 pb-20"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="container mx-auto px-4">
+                {analysis && <AudioAnalysis analysis={analysis} audioFile={audioFile} audioUrl={audioUrl} onReset={handleReset} />}
+              </div>
+            </motion.section>
+          )}
 
-        {!analysis && !error && (
-          <>
-            <section id="features" className="w-full">
-              <Features />
-            </section>
-            
-            {/* <section id="testimonials" className="w-full">
-              <TestimonialsComponent />
-            </section>
-            
-            <section id="pricing" className="w-full">
-              <Pricing />
-            </section> */}
+          {!analysis && !error && (
+            <>
+              <section id="features" className="w-full">
+                <Features />
+              </section>
+              
+              {/* <section id="testimonials" className="w-full">
+                <TestimonialsComponent />
+              </section>
+              
+              <section id="pricing" className="w-full">
+                <Pricing />
+              </section> */}
 
-            <section id="faq" className="w-full">
-              <FaqSection />
-            </section>
-          </>
-        )}
-      </main>
+              <section id="faq" className="w-full">
+                <FaqSection />
+              </section>
+            </>
+          )}
+        </main>
 
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </ApiQuotaProvider>
   );
 }
 

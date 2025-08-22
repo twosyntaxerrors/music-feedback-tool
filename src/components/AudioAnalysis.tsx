@@ -5,8 +5,9 @@ import { Badge } from "./ui/badge";
 import { AlertCircle, CheckCircle, Info, Music, Waves } from "lucide-react";
 import { motion } from "framer-motion";
 import { type Analysis } from "@/types/analysis";
-import { WaveformPlayer } from "./WaveformPlayer";
+import { AnnotatedWaveformPlayer } from "./AnnotatedWaveformPlayer";
 import { GlowingEffect } from "./ui/glowing-effect";
+import { ApiQuotaDisplay } from "./api-quota-display";
 
 function TrackOverview({ analysis }: { analysis: Analysis }) {
   return (
@@ -377,7 +378,7 @@ export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset }: AudioA
                 <span>{audioFile.name}</span>
                 <span>{(audioFile.size / (1024 * 1024)).toFixed(2)} MB</span>
               </div>
-              <WaveformPlayer audioUrl={audioUrl} />
+              <AnnotatedWaveformPlayer audioUrl={audioUrl} analysis={analysis} />
             </div>
           </CardContent>
         </Card>
@@ -386,9 +387,30 @@ export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset }: AudioA
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <TrackOverview analysis={analysis} />
         <PerformanceMetrics analysis={analysis} />
-        <KeyInsights analysis={analysis} />
-        <DetailedAnalysis analysis={analysis} />
       </div>
+
+      <KeyInsights analysis={analysis} />
+      <DetailedAnalysis analysis={analysis} />
+
+      {/* Compact API Quota Display at Bottom */}
+      <div className="pt-4">
+        <ApiQuotaDisplay />
+      </div>
+
+      {/* Additional New Analysis Button at Bottom */}
+      {onReset && (
+        <div className="flex justify-center pt-4">
+          <button 
+            onClick={onReset}
+            className="relative inline-flex h-12 overflow-hidden rounded-md p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50"
+          >
+            <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)]" />
+            <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-md bg-slate-950 px-3 py-1 text-sm font-medium text-white backdrop-blur-3xl">
+              New Analysis
+            </span>
+          </button>
+        </div>
+      )}
     </div>
   );
 } 

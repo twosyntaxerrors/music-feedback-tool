@@ -6,6 +6,7 @@ import { AudioPlayer } from "./AudioPlayer";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { FileUpload } from "./ui/file-upload";
+import { useApiQuota } from "@/lib/contexts/ApiQuotaContext";
 
 interface AudioUploaderProps {
   onUploadComplete: (analysis: any, file: File, url: string) => void;
@@ -28,6 +29,7 @@ export function AudioUploader({ onUploadComplete, onError, onReset }: AudioUploa
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const { incrementUsage, remainingRequests } = useApiQuota();
 
   const validateFile = (file: File) => {
     if (file.size > MAX_FILE_SIZE) {
@@ -60,6 +62,13 @@ export function AudioUploader({ onUploadComplete, onError, onReset }: AudioUploa
   const uploadFile = async () => {
     if (!selectedFile) return;
 
+    // Check if we have remaining API requests
+    if (remainingRequests <= 0) {
+      setValidationError("Daily API quota exceeded. Please try again tomorrow.");
+      onError("Daily API quota exceeded. Please try again tomorrow.");
+      return;
+    }
+
     setUploading(true);
     setValidationError(null);
 
@@ -87,6 +96,9 @@ export function AudioUploader({ onUploadComplete, onError, onReset }: AudioUploa
       if (!audioUrl) {
         throw new Error("Audio URL is not available");
       }
+
+      // Increment API usage after successful analysis
+      incrementUsage();
 
       onUploadComplete(data, selectedFile, audioUrl);
     } catch (error) {

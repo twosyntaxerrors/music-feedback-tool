@@ -210,7 +210,7 @@ export async function POST(req: NextRequest) {
     console.log("File converted to base64");
 
     // Initialize Gemini model
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro-exp-03-25" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
 
     console.log("Sending request to Gemini API");
 
