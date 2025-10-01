@@ -3,7 +3,8 @@
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Menu, X, ChevronDown, Headphones } from "lucide-react"
+import { Menu, X, Headphones } from "lucide-react"
+import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs"
 
 import {
   NavigationMenu,
@@ -115,7 +116,7 @@ export function Header() {
           </motion.div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:block">
+          <div className="hidden md:flex items-center gap-6">
             <NavigationMenu>
               <NavigationMenuList>
                 {navItems.map((item) => (
@@ -161,6 +162,25 @@ export function Header() {
                 ))}
               </NavigationMenuList>
             </NavigationMenu>
+
+            <SignedOut>
+              <SignInButton mode="modal">
+                <button className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:border-white/40 hover:bg-white/10">
+                  Sign in / Register
+                </button>
+              </SignInButton>
+            </SignedOut>
+            <SignedIn>
+              <UserButton
+                appearance={{
+                  elements: {
+                    userButtonOuterIdentifier: "text-white",
+                    avatarBox: "w-8 h-8",
+                  },
+                }}
+                afterSignOutUrl="/"
+              />
+            </SignedIn>
           </div>
 
           {/* Mobile Navigation Button */}
@@ -196,6 +216,29 @@ export function Header() {
                 </li>
               ))}
             </ul>
+            <div className="mt-6 border-t border-white/10 pt-4">
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <button className="w-full rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:border-white/40 hover:bg-white/10">
+                    Sign in / Register
+                  </button>
+                </SignInButton>
+              </SignedOut>
+              <SignedIn>
+                <div className="flex items-center justify-between px-4">
+                  <span className="text-sm text-white/80">Account</span>
+                  <UserButton
+                    appearance={{
+                      elements: {
+                        userButtonOuterIdentifier: "text-white",
+                        avatarBox: "w-9 h-9",
+                      },
+                    }}
+                    afterSignOutUrl="/"
+                  />
+                </div>
+              </SignedIn>
+            </div>
           </div>
         </motion.div>
       )}

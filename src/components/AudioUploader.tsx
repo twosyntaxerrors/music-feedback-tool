@@ -1,12 +1,13 @@
-"use client"
+"use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
 import { AudioPlayer } from "./AudioPlayer";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { FileUpload } from "./ui/file-upload";
 import { useApiQuota } from "@/lib/contexts/ApiQuotaContext";
+import { useAuth, useClerk } from "@clerk/nextjs";
 
 interface AudioUploaderProps {
   onUploadComplete: (analysis: any, file: File, url: string) => void;
@@ -29,6 +30,13 @@ export function AudioUploader({ onUploadComplete, onError, onReset }: AudioUploa
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [authNotice, setAuthNotice] = useState<string | null>(null);
+  const [controlledFiles, setControlledFiles] = useState<File[]>([]);
+  const pendingActionRef = useRef<(() => void) | null>(null);
+  const authModalRequestedRef = useRef(false);
+  const { isSignedIn } = useAuth();
+  const previousAuthRef = useRef(isSignedIn);
+  const { openSignIn } = useClerk();
   const { incrementUsage, remainingRequests } = useApiQuota();
 
   const validateFile = (file: File) => {
@@ -44,23 +52,78 @@ export function AudioUploader({ onUploadComplete, onError, onReset }: AudioUploa
     return null;
   };
 
+  const revokeAudioUrl = () => {
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl);
+    }
+  };
+
+  const finalizeSelection = (file: File) => {
+    const error = validateFile(file);
+    if (error) {
+      setValidationError(error);
+      setAuthNotice(null);
+      setSelectedFile(null);
+      setControlledFiles([]);
+      revokeAudioUrl();
+      return;
+    }
+
+    setValidationError(null);
+    setAuthNotice(null);
+    setSelectedFile(file);
+    revokeAudioUrl();
+    const url = URL.createObjectURL(file);
+    setAudioUrl(url);
+    setControlledFiles([file]);
+  };
+
+  const ensureSignedIn = (action?: () => void) => {
+    if (isSignedIn) {
+      return true;
+    }
+
+    if (action) {
+      pendingActionRef.current = action;
+    }
+
+    if (!authModalRequestedRef.current) {
+      authModalRequestedRef.current = true;
+      const locationHref = typeof window !== "undefined" ? window.location.href : "/";
+      void openSignIn({
+        afterSignInUrl: locationHref,
+        afterSignUpUrl: locationHref,
+      }).finally(() => {
+        authModalRequestedRef.current = false;
+      });
+    }
+
+    setAuthNotice("Sign in to upload and analyze your audio.");
+
+    return false;
+  };
+
   const handleFileChange = (files: File[]) => {
     const file = files[0];
     if (file) {
-      const error = validateFile(file);
-      if (error) {
-        setValidationError(error);
+      const processSelection = () => finalizeSelection(file);
+
+      if (!ensureSignedIn(processSelection)) {
         return;
       }
 
-      setValidationError(null);
-      setSelectedFile(file);
-      setAudioUrl(URL.createObjectURL(file));
+      processSelection();
     }
   };
 
   const uploadFile = async () => {
     if (!selectedFile) return;
+
+    if (!ensureSignedIn(() => {
+      void uploadFile();
+    })) {
+      return;
+    }
 
     // Check if we have remaining API requests
     if (remainingRequests <= 0) {
@@ -72,22 +135,47 @@ export function AudioUploader({ onUploadComplete, onError, onReset }: AudioUploa
     setUploading(true);
     setValidationError(null);
 
+    let timingLabel: string | null = null;
+
     try {
+      const uploadMeta = {
+        name: selectedFile.name,
+        size: selectedFile.size,
+        type: selectedFile.type,
+      };
+      console.log("[AudioUploader] Starting upload", uploadMeta);
+      timingLabel = `[AudioUploader] upload->fetch ${selectedFile.name}`;
+      console.time(timingLabel);
+
       const formData = new FormData();
       formData.append("file", selectedFile);
 
       const response = await fetch("/api/gemini/audio-analysis", {
         method: "POST",
         body: formData,
+        credentials: "include",
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Upload failed");
+
+        // Create a more detailed error object
+        const error = new Error(errorData.error || "Upload failed");
+        (error as any).statusCode = response.status;
+        (error as any).errorType = errorData.errorType;
+        (error as any).details = errorData.details;
+
+        throw error;
       }
 
       const data = await response.json();
-      
+
+      console.log("[AudioUploader] API response received", {
+        status: response.status,
+        ok: response.ok,
+        keys: Object.keys(data || {}),
+      });
+
       // Validate the response data
       if (!data || typeof data !== 'object') {
         throw new Error("Invalid response from server");
@@ -97,31 +185,114 @@ export function AudioUploader({ onUploadComplete, onError, onReset }: AudioUploa
         throw new Error("Audio URL is not available");
       }
 
+      console.log('🔍 AudioUploader - Calling onUploadComplete with:', { data, file: selectedFile, url: audioUrl });
+      
       // Increment API usage after successful analysis
       incrementUsage();
 
       onUploadComplete(data, selectedFile, audioUrl);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Upload failed";
+      const errorObj = error as any;
+      const statusCode = errorObj.statusCode || 500;
+      const errorType = errorObj.errorType || "UNKNOWN_ERROR";
+
+      let message = error instanceof Error ? error.message : "Upload failed";
+
+      // Handle specific error types with user-friendly messages
+      if (statusCode === 429) {
+        if (errorType === "RATE_LIMIT_EXCEEDED") {
+          message = "Too many requests. Please wait a moment before trying again.";
+        } else if (errorType === "QUOTA_EXCEEDED") {
+          message = "Daily API quota exceeded. Please try again tomorrow.";
+        }
+      } else if (statusCode === 413) {
+        message = "File is too large. Please upload a smaller file (max 20MB).";
+      } else if (statusCode === 415) {
+        message = "Unsupported file format. Please upload an audio file.";
+      } else if (statusCode === 401) {
+        message = "Authentication required. Please sign in to continue.";
+      }
+
       setValidationError(message);
       onError(message);
     } finally {
+      if (timingLabel) {
+        console.timeEnd(timingLabel);
+      } else {
+        console.debug("[AudioUploader] upload timing label unavailable; skipping console.timeEnd");
+      }
       setUploading(false);
     }
   };
 
   const handleRemove = () => {
+    revokeAudioUrl();
     setSelectedFile(null);
     setAudioUrl(null);
     setValidationError(null);
+    setAuthNotice(null);
+    setControlledFiles([]);
     if (onReset) {
       onReset();
     }
   };
 
+  const handleRequireAuth = (interaction: "click" | "drop" | "change", files?: File[]) => {
+    if (isSignedIn) {
+      return true;
+    }
+
+    if (files && files.length > 0) {
+      const file = files[0];
+      pendingActionRef.current = () => finalizeSelection(file);
+    }
+
+    ensureSignedIn();
+    return false;
+  };
+
+  useEffect(() => {
+    if (previousAuthRef.current === isSignedIn) {
+      return;
+    }
+
+    previousAuthRef.current = isSignedIn;
+
+    if (!isSignedIn) {
+      pendingActionRef.current = null;
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
+      if (selectedFile || audioUrl || validationError || controlledFiles.length || authNotice) {
+        setSelectedFile(null);
+        setAudioUrl(null);
+        setValidationError(null);
+        setAuthNotice(null);
+        setControlledFiles([]);
+        if (onReset) {
+          onReset();
+        }
+      }
+      return;
+    }
+
+    setAuthNotice(null);
+
+    if (pendingActionRef.current) {
+      const action = pendingActionRef.current;
+      pendingActionRef.current = null;
+      action();
+    }
+  }, [authNotice, audioUrl, controlledFiles.length, isSignedIn, onReset, selectedFile, validationError]);
+
   return (
     <div className="space-y-6">
-      <FileUpload onChange={handleFileChange} onRemove={handleRemove} />
+      <FileUpload
+        onChange={handleFileChange}
+        onRemove={handleRemove}
+        onRequireAuth={handleRequireAuth}
+        files={controlledFiles}
+      />
 
       {validationError && (
         <motion.div
@@ -131,6 +302,17 @@ export function AudioUploader({ onUploadComplete, onError, onReset }: AudioUploa
         >
           <AlertCircle className="w-4 h-4" />
           <span>{validationError}</span>
+        </motion.div>
+      )}
+
+      {authNotice && !validationError && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-2 p-3 rounded-lg bg-blue-500/10 text-blue-300 text-sm"
+        >
+          <AlertCircle className="w-4 h-4" />
+          <span>{authNotice}</span>
         </motion.div>
       )}
 

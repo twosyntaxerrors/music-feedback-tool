@@ -52,14 +52,27 @@ export default function AIAudioAnalysisLanding() {
   }, []);
 
   const handleAnalysisComplete = (data: Analysis, file: File, url: string) => {
+    console.log('🔍 Main Page - handleAnalysisComplete called with data:', data);
+    console.log('🔍 Main Page - Analysis keys:', Object.keys(data));
+    console.log('🔍 Main Page - File:', file.name, file.size);
+    console.log('🔍 Main Page - URL:', url);
+    
     setAnalysis(data);
     setError(null);
     setAudioFile(file);
     setAudioUrl(url);
   };
 
-  const handleError = (errorMessage: string) => {
-    setError(errorMessage);
+  const handleError = (error: string) => {
+    console.error('Analysis error:', error);
+    setError(error);
+    setAnalysis(null);
+    setAudioFile(null);
+    setAudioUrl(null);
+  };
+
+  const handleRetry = () => {
+    setError(null);
     setAnalysis(null);
     setAudioFile(null);
     setAudioUrl(null);
@@ -101,6 +114,36 @@ export default function AIAudioAnalysisLanding() {
             >
               <div className="container mx-auto px-4">
                 {analysis && <AudioAnalysis analysis={analysis} audioFile={audioFile} audioUrl={audioUrl} onReset={handleReset} />}
+                {error && (
+                  <div className="max-w-2xl mx-auto text-center">
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-8 backdrop-blur-sm">
+                      <div className="text-red-400 text-6xl mb-4">⚠️</div>
+                      <h2 className="text-2xl font-bold text-white mb-4">Analysis Failed</h2>
+                      <p className="text-gray-300 mb-6">
+                        {error.includes('Could not find valid JSON') 
+                          ? "The AI analysis couldn't process your audio file properly. This might be due to file format issues or the AI service being temporarily unavailable."
+                          : error.includes('API key') 
+                          ? "There's an issue with the API configuration. Please check your settings."
+                          : "Something went wrong while analyzing your audio file. Please try again."
+                        }
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                        <button
+                          onClick={handleRetry}
+                          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
+                        >
+                          Try Again
+                        </button>
+                        <button
+                          onClick={handleReset}
+                          className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200"
+                        >
+                          Upload Different File
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.section>
           )}

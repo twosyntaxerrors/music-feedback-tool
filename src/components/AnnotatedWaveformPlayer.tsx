@@ -24,62 +24,144 @@ export function AnnotatedWaveformPlayer({ audioUrl, analysis }: AnnotatedWavefor
   const [lastSeekTime, setLastSeekTime] = useState(0);
   const [hoveredAvatar, setHoveredAvatar] = useState<TemporalAnnotation | null>(null);
   const [isSeeking, setIsSeeking] = useState(false);
+  const [commentCounter, setCommentCounter] = useState(0);
+  // New: toggle to enable/disable comments and avatars
+  const [commentsEnabled, setCommentsEnabled] = useState(false);
+  const [aiCommentsLoading, setAiCommentsLoading] = useState(false);
+  const [aiComments, setAiComments] = useState<TemporalAnnotation[]>([]);
 
-  // Generate temporal annotations using the AnnotationGenerator
+  // Generate temporal annotations using AI comments when available
   const annotations = useMemo(() => {
-    
-    if (duration === 0) {
+    // Return AI comments if available, otherwise return empty array
+    if (aiComments.length > 0) {
+      console.log('✅ Using AI-generated comments:', aiComments.length);
+      return aiComments;
+    }
+
+    // Return empty array when comments are disabled or loading
+    if (!commentsEnabled || aiCommentsLoading) {
+      console.log('🔇 Comments disabled or loading, returning empty array');
       return [];
     }
-    
-    if (!analysis || Object.keys(analysis).length === 0) {
-      // Generate test annotations for debugging
-      const testAnnotations: TemporalAnnotation[] = [
-        {
-          id: 'test-1',
-          timestamp: duration * 0.1,
-          type: 'instrument',
-          title: 'Test Comment',
-          description: '🔥🔥🔥 This is a test comment! Love how it builds up',
-          color: 'bg-blue-500/20 border-blue-400/40 text-blue-300',
-          avatarColor: 'bg-blue-500',
-          intensity: 0.8,
-          category: 'instrument'
-        },
-        {
-          id: 'test-2',
-          timestamp: duration * 0.3,
-          type: 'mood',
-          title: 'Test Mood',
-          description: '🌊🌊 This vibe is so atmospheric! Love the moody energy',
-          color: 'bg-purple-500/20 border-purple-400/40 text-purple-300',
-          avatarColor: 'bg-purple-500',
-          intensity: 0.7,
-          category: 'mood'
-        },
-        {
-          id: 'test-3',
-          timestamp: duration * 0.6,
-          type: 'rhythm',
-          title: 'Test Rhythm',
-          description: '⚡⚡⚡ RHYTHM PEAK! This is where the magic happens',
-          color: 'bg-green-500/20 border-green-400/40 text-green-300',
-          avatarColor: 'bg-green-500',
-          intensity: 0.9,
-          category: 'rhythm'
-        }
-      ];
-      return testAnnotations;
+
+    // Check if analysis has meaningful data
+    const hasAnalysisData = analysis &&
+      typeof analysis === 'object' &&
+      analysis.primary_genre &&
+      analysis.key_instruments &&
+      analysis.mood_tags;
+
+    if (!hasAnalysisData) {
+      console.log('❌ Analysis is empty or missing key data, returning empty array');
+      return [];
     }
-    
+
+    console.log('✅ Using fallback AnnotationGenerator');
     try {
       const generator = new AnnotationGenerator({ trackDuration: duration, analysis });
       const generated = generator.generateAllAnnotations();
+      console.log('✅ Generated annotations:', generated);
       return generated;
     } catch (error) {
+      console.error('❌ Error generating annotations:', error);
       return [];
     }
-  }, [analysis, duration]);
+  }, [analysis, duration, aiComments, commentsEnabled, aiCommentsLoading]);
+
+  // Function to generate AI comments when enabled
+  const generateAIComments = async () => {
+    if (!analysis || duration === 0) {
+      console.log('❌ Cannot generate AI comments: missing analysis or duration');
+      return;
+    }
+
+    setAiCommentsLoading(true);
+    try {
+      console.log('🚀 Generating AI comments...');
+
+      const response = await fetch('/api/gemini/audio-comments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          analysis,
+          trackDuration: duration,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+
+        // Create a more detailed error object
+        const error = new Error(errorData.error || "Failed to generate AI comments");
+        (error as any).statusCode = response.status;
+        (error as any).errorType = errorData.errorType;
+        (error as any).details = errorData.details;
+
+        throw error;
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.comments) {
+        console.log('✅ AI comments generated successfully:', data.comments.length);
+        setAiComments(data.comments);
+      } else {
+        console.error('❌ Failed to generate AI comments:', data.error);
+
+        // Handle specific error types
+        const errorObj = error as any;
+        const statusCode = errorObj.statusCode || 500;
+        const errorType = errorObj.errorType || "UNKNOWN_ERROR";
+
+        if (statusCode === 429) {
+          if (errorType === "RATE_LIMIT_EXCEEDED") {
+            alert("Too many requests to AI comments service. Please wait a moment before trying again.");
+          } else if (errorType === "QUOTA_EXCEEDED") {
+            alert("Daily API quota exceeded for AI comments. Please try again tomorrow.");
+          }
+        } else {
+          alert(`Failed to generate AI comments: ${data.error}`);
+        }
+
+        // Fallback to local annotation generator
+        console.log('🔄 Falling back to local annotation generator...');
+        const generator = new AnnotationGenerator({ trackDuration: duration, analysis });
+        const generated = generator.generateAllAnnotations();
+        setAiComments(generated);
+      }
+    } catch (error) {
+      console.error('❌ Error generating AI comments:', error);
+
+      // Handle specific error types
+      const errorObj = error as any;
+      const statusCode = errorObj.statusCode || 500;
+      const errorType = errorObj.errorType || "UNKNOWN_ERROR";
+
+      if (statusCode === 429) {
+        if (errorType === "RATE_LIMIT_EXCEEDED") {
+          alert("Too many requests to AI comments service. Please wait a moment before trying again.");
+        } else if (errorType === "QUOTA_EXCEEDED") {
+          alert("Daily API quota exceeded for AI comments. Please try again tomorrow.");
+        }
+      } else {
+        alert(`Failed to generate AI comments: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+
+      // Fallback to local annotation generator
+      console.log('🔄 Falling back to local annotation generator...');
+      try {
+        const generator = new AnnotationGenerator({ trackDuration: duration, analysis });
+        const generated = generator.generateAllAnnotations();
+        setAiComments(generated);
+      } catch (fallbackError) {
+        console.error('❌ Fallback annotation generation also failed:', fallbackError);
+      }
+    } finally {
+      setAiCommentsLoading(false);
+    }
+  };
 
   // Detect seeking and reset comment history when needed
   useEffect(() => {
@@ -94,6 +176,7 @@ export function AnnotatedWaveformPlayer({ audioUrl, analysis }: AnnotatedWavefor
     if (timeJump > 2) {
       setCommentHistory([]);
       setCurrentComment(null);
+      setCommentCounter(0);
       
       // Also check if we should show a comment immediately at the new position
       setTimeout(() => {
@@ -105,11 +188,12 @@ export function AnnotatedWaveformPlayer({ audioUrl, analysis }: AnnotatedWavefor
         if (commentAtNewPosition) {
           setCurrentComment(commentAtNewPosition);
           setCommentHistory([commentAtNewPosition]);
+          setCommentCounter(prev => prev + 1);
           
-          // Auto-hide comment after 4 seconds
+          // Auto-hide comment after 2 seconds
           setTimeout(() => {
             setCurrentComment(null);
-          }, 2000); // Changed from 4000 to 2000 for faster fade-out
+          }, 2000);
         }
       }, 100);
     }
@@ -117,14 +201,15 @@ export function AnnotatedWaveformPlayer({ audioUrl, analysis }: AnnotatedWavefor
     setLastSeekTime(currentTime);
   }, [currentTime, lastSeekTime, annotations]);
 
-  // Simple comment display - one at a time with fade in/out
+  // Stable comment display - comments appear at their exact timestamps and don't shift
   useEffect(() => {
     if (!isPlaying || annotations.length === 0 || duration === 0) return;
 
-    // Find the next comment that should appear
+    // Find the next comment that should appear based on exact timestamp
     const nextComment = annotations.find(annotation => {
       const timeDiff = currentTime - annotation.timestamp;
-      const shouldAppear = timeDiff >= -0.5 && timeDiff <= 1 && 
+      // Comment should appear when we're within 0.5 seconds of its timestamp
+      const shouldAppear = timeDiff >= -0.5 && timeDiff <= 0.5 && 
                            !commentHistory.some(hist => hist.id === annotation.id);
       
       return shouldAppear;
@@ -133,11 +218,12 @@ export function AnnotatedWaveformPlayer({ audioUrl, analysis }: AnnotatedWavefor
     if (nextComment) {
       setCurrentComment(nextComment);
       setCommentHistory(prev => [...prev, nextComment]);
+      setCommentCounter(prev => prev + 1);
       
-      // Auto-hide comment after 4 seconds
+      // Auto-hide comment after 2 seconds
       setTimeout(() => {
         setCurrentComment(null);
-      }, 2000); // Changed from 4000 to 2000 for faster fade-out
+      }, 2000);
     }
   }, [isPlaying, currentTime, annotations, commentHistory, duration]);
 
@@ -147,6 +233,7 @@ export function AnnotatedWaveformPlayer({ audioUrl, analysis }: AnnotatedWavefor
       setCurrentComment(null);
       setCommentHistory([]);
       setLastSeekTime(0);
+      setCommentCounter(0);
     }
   }, [currentTime]);
 
@@ -245,6 +332,7 @@ export function AnnotatedWaveformPlayer({ audioUrl, analysis }: AnnotatedWavefor
     setCommentHistory([]);
     setCurrentComment(null);
     setLastSeekTime(annotation.timestamp);
+    setCommentCounter(0); // Reset counter on seek
     
     // Resume playback after a brief delay and update button state
     setTimeout(() => {
@@ -274,17 +362,71 @@ export function AnnotatedWaveformPlayer({ audioUrl, analysis }: AnnotatedWavefor
           {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
         </Button>
         
+
         <div className="text-xs text-white/80 px-2 py-0.5 rounded bg-black/40">
           {formatTime(currentTime)} / {formatTime(duration)}
         </div>
       </div>
+
+      {/* Comments toggle moved to top-right of the card */}
+      <div className="absolute right-4 top-4 z-30">
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-white/80">Comments</span>
+          <button
+            onClick={() => {
+              setCommentsEnabled(prev => {
+                const next = !prev;
+                if (next) {
+                  // Generate AI comments when enabling
+                  generateAIComments();
+                } else {
+                  // Clear comments when disabling
+                  setCurrentComment(null);
+                  setHoveredAvatar(null);
+                  setAiComments([]);
+                }
+                return next;
+              });
+            }}
+            className={`h-9 w-14 rounded-md p-0.5 flex items-center transition-colors ${
+              aiCommentsLoading ? 'bg-yellow-500/60 border border-yellow-500' :
+              commentsEnabled ? 'bg-green-500/60 border border-green-500' :
+              'bg-white/5 border border-white/10'
+            }`}
+            aria-pressed={commentsEnabled}
+            title={
+              aiCommentsLoading ? 'Generating AI comments...' :
+              commentsEnabled ? 'Turn comments off' :
+              'Turn comments on'
+            }
+          >
+            {aiCommentsLoading ? (
+              <div className="h-6 w-6 rounded-full bg-white/90 flex items-center justify-center">
+                <div className="h-3 w-3 border-2 border-transparent border-t-white rounded-full animate-spin" />
+              </div>
+            ) : (
+              <div className={`h-6 w-6 rounded-full bg-white/90 transform transition-transform ${commentsEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* AI Comments Loading Indicator */}
+      {aiCommentsLoading && (
+        <div className="mt-2 p-2 rounded-lg border border-yellow-500/20 bg-yellow-500/10">
+          <div className="text-xs text-yellow-400 text-center flex items-center justify-center gap-2">
+            <div className="h-3 w-3 border-2 border-transparent border-t-yellow-400 rounded-full animate-spin" />
+            Generating AI comments...
+          </div>
+        </div>
+      )}
 
       {/* Waveform with visible annotation avatars */}
       <div className="relative">
         <div ref={waveformRef} className="w-full" />
         
         {/* Annotation avatars on waveform */}
-        {annotations.map((annotation) => (
+        {commentsEnabled && annotations.map((annotation) => (
           <div
             key={annotation.id}
             className="absolute top-0 bottom-0 z-20 flex flex-col items-center"
@@ -295,7 +437,7 @@ export function AnnotatedWaveformPlayer({ audioUrl, analysis }: AnnotatedWavefor
             
             {/* Avatar icon */}
             <div 
-              className={`absolute top-2 w-6 h-6 rounded-full border-2 flex items-center justify-center cursor-pointer hover:scale-110 transition-all duration-200 ${annotation.avatarColor} ${isSeeking ? 'animate-pulse' : ''} ${hoveredAvatar?.id === annotation.id ? 'border-white scale-110 ring-2 ring-white/50' : 'border-white/30'}`}
+              className={`absolute bottom-2 w-6 h-6 rounded-full border-2 flex items-center justify-center cursor-pointer hover:scale-110 transition-all duration-200 ${annotation.avatarColor} ${isSeeking ? 'animate-pulse' : ''} ${hoveredAvatar?.id === annotation.id ? 'border-white scale-110 ring-2 ring-white/50' : 'border-white/30'}`}
               style={{ 
                 transform: `scale(${0.8 + (annotation.intensity * 0.4)})`,
                 boxShadow: annotation.intensity > 0.8 ? '0 0 10px rgba(255, 255, 255, 0.3)' : 'none'
@@ -327,19 +469,32 @@ export function AnnotatedWaveformPlayer({ audioUrl, analysis }: AnnotatedWavefor
         </div>
       )}
 
+      
+
       {/* Unified Comment Display - Handles both hover and playback */}
       <div className="mt-4">
+        {/* Show message when comments are disabled */}
+        {!commentsEnabled && !aiCommentsLoading && (
+          <div className="p-3 rounded-lg border border-white/10 bg-white/5">
+            <div className="text-sm text-white/60 text-center">
+              💭 Enable AI comments to see interactive annotations on your track
+            </div>
+          </div>
+        )}
+
         {/* Show hover comment if hovering, otherwise show current playback comment */}
-        {(hoveredAvatar || currentComment) && (
+        {commentsEnabled && (hoveredAvatar || currentComment) && (
           <motion.div 
             className="p-3 rounded-lg border border-white/20 bg-black/40 backdrop-blur-sm"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            key={hoveredAvatar?.id || currentComment?.id || 'comment'}
+            key={`comment-${hoveredAvatar?.id || currentComment?.id || 'none'}-${hoveredAvatar ? 'hover' : 'playback'}`}
+            transition={{ duration: 0.2 }}
           >
             <div className="flex items-start gap-3">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${(hoveredAvatar || currentComment)?.avatarColor}`}>
+                {(hoveredAvatar || currentComment)?.type?.charAt(0).toUpperCase() || 'C'}
               </div>
               <div className="flex-1">
                 <div className="text-sm text-white/80 leading-relaxed">

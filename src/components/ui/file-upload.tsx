@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Upload, X } from "lucide-react";
 import { useDropzone } from "react-dropzone";
@@ -25,17 +25,69 @@ const secondaryVariant = {
   },
 };
 
+type UploadInteraction = "click" | "drop" | "change";
+
 export const FileUpload = ({
   onChange,
   onRemove,
+  onRequireAuth,
+  files: controlledFiles,
 }: {
   onChange?: (files: File[]) => void;
   onRemove?: () => void;
+  onRequireAuth?: (interaction: UploadInteraction, files?: File[]) => Promise<boolean> | boolean;
+  files?: File[];
 }) => {
   const [files, setFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    if (controlledFiles === undefined) return;
+    setFiles(controlledFiles);
+  }, [controlledFiles]);
+
+  const requestAuth = (interaction: UploadInteraction, candidateFiles?: File[]) => {
+    if (!onRequireAuth) {
+      return true as const;
+    }
+
+    try {
+      const result = onRequireAuth(interaction, candidateFiles);
+
+      if (typeof result === "boolean") {
+        console.debug("[FileUpload] auth check completed", {
+          interaction,
+          allowed: result,
+          fileCount: candidateFiles?.length ?? 0,
+        });
+        return result;
+      }
+
+      console.debug("[FileUpload] auth check pending", {
+        interaction,
+        fileCount: candidateFiles?.length ?? 0,
+      });
+
+      return Promise.resolve(result)
+        .then((allowed) => {
+          console.debug("[FileUpload] auth promise resolved", { interaction, allowed });
+          return allowed;
+        })
+        .catch((error) => {
+          console.error("[FileUpload] auth promise rejected", { interaction, error });
+          return false;
+        });
+    } catch (error) {
+      console.error("[FileUpload] auth check threw", { interaction, error });
+      return false as const;
+    }
+  };
+
   const handleFileChange = (newFiles: File[]) => {
+    console.debug("[FileUpload] accepting files", {
+      names: newFiles.map((file) => file.name),
+      count: newFiles.length,
+    });
     setFiles((prevFiles) => [...prevFiles, ...newFiles]);
     onChange && onChange(newFiles);
   };
@@ -46,14 +98,40 @@ export const FileUpload = ({
     onRemove && onRemove();
   };
 
-  const handleClick = () => {
-    fileInputRef.current?.click();
-  };
-
   const { getRootProps, isDragActive } = useDropzone({
     multiple: false,
     noClick: true,
-    onDrop: handleFileChange,
+    onDrop: (acceptedFiles, fileRejections, event) => {
+      const authResult = requestAuth("drop", acceptedFiles);
+
+      const prevent = () => {
+        event.preventDefault();
+        event.stopPropagation?.();
+      };
+
+      if (authResult === true) {
+        console.debug("[FileUpload] drop permitted", { count: acceptedFiles.length });
+        handleFileChange(acceptedFiles);
+        return;
+      }
+
+      if (authResult === false) {
+        console.debug("[FileUpload] drop blocked; auth required");
+        prevent();
+        return;
+      }
+
+      authResult.then((allowed) => {
+        if (!allowed) {
+          console.debug("[FileUpload] drop denied after async auth");
+          prevent();
+          return;
+        }
+
+        console.debug("[FileUpload] drop allowed after async auth", { count: acceptedFiles.length });
+        handleFileChange(acceptedFiles);
+      });
+    },
     onDropRejected: (error) => {
       console.log(error);
     },
@@ -61,8 +139,8 @@ export const FileUpload = ({
 
   return (
     <div className="w-full" {...getRootProps()}>
-      <motion.div
-        onClick={handleClick}
+      <motion.label
+        htmlFor="file-upload-handle"
         whileHover="animate"
         className="p-10 group/file block rounded-lg cursor-pointer w-full relative overflow-hidden"
       >
@@ -70,9 +148,59 @@ export const FileUpload = ({
           ref={fileInputRef}
           id="file-upload-handle"
           type="file"
-          onChange={(e) => handleFileChange(Array.from(e.target.files || []))}
-          className="hidden"
-          accept="audio/mpeg,audio/wav"
+          onClickCapture={(event) => {
+            const authResult = requestAuth("click");
+
+            if (authResult === true) {
+              console.debug("[FileUpload] click permitted");
+              return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (authResult === false) {
+              console.debug("[FileUpload] click blocked; auth required");
+              return;
+            }
+
+            authResult.then((allowed) => {
+              if (!allowed) {
+                console.debug("[FileUpload] click denied after async auth");
+                return;
+              }
+
+              console.debug(
+                "[FileUpload] auth completed after click; user must click again to open picker"
+              );
+            });
+          }}
+          onChange={async (e) => {
+            const pendingFiles = Array.from(e.target.files || []);
+            const authResult = requestAuth("change", pendingFiles);
+
+            if (authResult === true) {
+              handleFileChange(pendingFiles);
+              return;
+            }
+
+            if (authResult === false) {
+              console.debug("[FileUpload] change blocked; auth required");
+              e.target.value = "";
+              return;
+            }
+
+            const allowed = await authResult;
+            if (!allowed) {
+              console.debug("[FileUpload] change denied after async auth");
+              e.target.value = "";
+              return;
+            }
+
+            handleFileChange(pendingFiles);
+          }}
+          className="absolute inset-0 z-30 h-full w-full cursor-pointer opacity-0"
+          accept="audio/mpeg,audio/wav,audio/aac,audio/ogg,audio/flac,audio/x-aiff"
         />
         <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,white,transparent)]">
           <GridPattern />
@@ -82,7 +210,7 @@ export const FileUpload = ({
             Upload your audio
           </p>
           <p className="relative z-20 font-sans font-normal text-neutral-400 dark:text-neutral-400 text-base mt-2">
-            Click to upload, or drag and drop your music. Max 20MB. MP3 or WAV only.
+            Click to upload, or drag and drop your music. Max 50MB. MP3, WAV, AAC, OGG, FLAC, or AIFF.
           </p>
           <div className="relative w-full mt-10 max-w-xl mx-auto">
             {files.length > 0 &&
@@ -180,7 +308,7 @@ export const FileUpload = ({
             )}
           </div>
         </div>
-      </motion.div>
+      </motion.label>
     </div>
   );
 };

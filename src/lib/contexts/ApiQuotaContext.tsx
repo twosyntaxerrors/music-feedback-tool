@@ -1,6 +1,7 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, ReactNode, useMemo } from "react"
+import { useAuth } from "@clerk/nextjs"
 
 interface ApiQuotaContextType {
   currentUsage: number
@@ -21,17 +22,19 @@ interface ApiQuotaProviderProps {
 export function ApiQuotaProvider({ children, maxRequests = 100 }: ApiQuotaProviderProps) {
   const [currentUsage, setCurrentUsage] = useState(0)
   const [nextReset, setNextReset] = useState("")
+  const { userId } = useAuth()
+  const storageKey = useMemo(() => userId ? `gemini_api_usage_${userId}` : "gemini_api_usage_guest", [userId])
 
   // Load usage from localStorage on mount
   useEffect(() => {
     const loadUsage = () => {
       try {
-        const stored = localStorage.getItem("gemini_api_usage")
+        const now = new Date()
+        const stored = localStorage.getItem(storageKey)
         if (stored) {
           const data = JSON.parse(stored)
           const lastReset = new Date(data.lastReset)
-          const now = new Date()
-          
+
           // Check if we need to reset (new day in PT)
           const pacificNow = new Date(now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }))
           const pacificLastReset = new Date(lastReset.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }))
@@ -41,7 +44,7 @@ export function ApiQuotaProvider({ children, maxRequests = 100 }: ApiQuotaProvid
               pacificNow.getFullYear() !== pacificLastReset.getFullYear()) {
             // New day, reset usage
             setCurrentUsage(0)
-            localStorage.setItem("gemini_api_usage", JSON.stringify({
+            localStorage.setItem(storageKey, JSON.stringify({
               count: 0,
               lastReset: now.toISOString()
             }))
@@ -51,7 +54,7 @@ export function ApiQuotaProvider({ children, maxRequests = 100 }: ApiQuotaProvid
           }
         } else {
           // First time, initialize
-          localStorage.setItem("gemini_api_usage", JSON.stringify({
+          localStorage.setItem(storageKey, JSON.stringify({
             count: 0,
             lastReset: now.toISOString()
           }))
@@ -63,7 +66,7 @@ export function ApiQuotaProvider({ children, maxRequests = 100 }: ApiQuotaProvid
     }
 
     loadUsage()
-  }, [])
+  }, [storageKey])
 
   // Calculate next reset time
   useEffect(() => {
@@ -94,10 +97,10 @@ export function ApiQuotaProvider({ children, maxRequests = 100 }: ApiQuotaProvid
     setCurrentUsage(newUsage)
     
     try {
-      const stored = localStorage.getItem("gemini_api_usage")
+      const stored = localStorage.getItem(storageKey)
       const data = stored ? JSON.parse(stored) : { count: 0, lastReset: new Date().toISOString() }
       
-      localStorage.setItem("gemini_api_usage", JSON.stringify({
+      localStorage.setItem(storageKey, JSON.stringify({
         ...data,
         count: newUsage
       }))
@@ -109,7 +112,7 @@ export function ApiQuotaProvider({ children, maxRequests = 100 }: ApiQuotaProvid
   const resetUsage = () => {
     setCurrentUsage(0)
     try {
-      localStorage.setItem("gemini_api_usage", JSON.stringify({
+      localStorage.setItem(storageKey, JSON.stringify({
         count: 0,
         lastReset: new Date().toISOString()
       }))

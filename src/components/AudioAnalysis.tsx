@@ -8,6 +8,7 @@ import { type Analysis } from "@/types/analysis";
 import { AnnotatedWaveformPlayer } from "./AnnotatedWaveformPlayer";
 import { GlowingEffect } from "./ui/glowing-effect";
 import { ApiQuotaDisplay } from "./api-quota-display";
+import { useEffect } from "react";
 
 function TrackOverview({ analysis }: { analysis: Analysis }) {
   return (
@@ -311,14 +312,41 @@ interface AudioAnalysisProps {
 }
 
 export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset }: AudioAnalysisProps) {
+  // Add logging to debug data flow
+  useEffect(() => {
+    console.log('🔍 AudioAnalysis - Component rendered with analysis:', analysis);
+    console.log('🔍 AudioAnalysis - Analysis type:', typeof analysis);
+    console.log('🔍 AudioAnalysis - Analysis keys:', analysis ? Object.keys(analysis) : 'NO ANALYSIS');
+    console.log('🔍 AudioAnalysis - Has audioFile:', !!audioFile);
+    console.log('🔍 AudioAnalysis - Has audioUrl:', !!audioUrl);
+  }, [analysis, audioFile, audioUrl]);
+
+  if (!analysis) {
+    console.log('❌ AudioAnalysis - No analysis data, showing loading state');
+    return (
+      <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300 relative">
+        <CardContent className="p-6">
+          <div className="text-center text-white/60">
+            Loading analysis...
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (analysis.error) {
+    const errorType = (analysis as any).errorType || "UNKNOWN_ERROR";
+    const isRateLimitError = errorType === "RATE_LIMIT_EXCEEDED" || errorType === "QUOTA_EXCEEDED";
+
     return (
       <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300">
         <CardContent className="p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-white">Analysis Error</h2>
+            <h2 className="text-xl font-bold text-white">
+              {isRateLimitError ? "Too Many Requests" : "Analysis Failed"}
+            </h2>
             {onReset && (
-              <button 
+              <button
                 onClick={onReset}
                 className="px-3 py-1 text-sm bg-black/40 border border-white/40 hover:border-white text-white rounded-md transition-colors"
               >
@@ -326,11 +354,59 @@ export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset }: AudioA
               </button>
             )}
           </div>
-          <p className="text-white/80">{analysis.error}</p>
-          {analysis.details && (
-            <pre className="mt-4 p-4 bg-black/40 border border-white/20 rounded text-sm text-white/60 overflow-auto">
-              {analysis.details}
-            </pre>
+
+          <div className="flex items-center gap-3 mb-4">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+              isRateLimitError ? 'bg-yellow-500/20' : 'bg-red-500/20'
+            }`}>
+              {isRateLimitError ? (
+                <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              )}
+            </div>
+            <div>
+              <p className="text-white/80">{analysis.error}</p>
+              {isRateLimitError && (
+                <p className="text-sm text-yellow-400 mt-1">
+                  This happens when too many requests are made to the AI service.
+                </p>
+              )}
+            </div>
+          </div>
+
+          {isRateLimitError && (
+            <div className="mt-4 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+              <div className="flex items-start gap-2">
+                <svg className="w-4 h-4 text-yellow-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <p className="text-sm text-yellow-400 font-medium">Rate Limit Information</p>
+                  <p className="text-xs text-yellow-300 mt-1">
+                    {errorType === "RATE_LIMIT_EXCEEDED"
+                      ? "The AI service is temporarily busy. Please wait a moment before trying again."
+                      : "You've reached your daily limit for AI analysis. Please try again tomorrow."
+                    }
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {analysis.details && process.env.NODE_ENV !== "production" && (
+            <details className="mt-4">
+              <summary className="cursor-pointer text-sm text-white/60 hover:text-white/80">
+                Technical Details
+              </summary>
+              <pre className="mt-2 p-4 bg-black/40 border border-white/20 rounded text-sm text-white/60 overflow-auto">
+                {analysis.details}
+              </pre>
+            </details>
           )}
         </CardContent>
       </Card>
