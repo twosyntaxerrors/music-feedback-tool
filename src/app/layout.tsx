@@ -3,6 +3,8 @@ import { Inter, Righteous } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { ClerkProvider } from "@clerk/nextjs";
+import { ConvexClientProvider } from "@/lib/convex/Provider";
+import { ApiQuotaProvider } from "@/lib/contexts/ApiQuotaContext";
 
 const inter = Inter({ subsets: ["latin"] });
 const righteous = Righteous({ 
@@ -86,7 +88,11 @@ export default function RootLayout({
     >
       <html lang="en" className="dark">
         <body className={`${inter.className} ${righteous.variable} bg-background text-foreground`}>
-          {children}
+          <ConvexClientProvider>
+            <ApiQuotaProvider>
+              {children}
+            </ApiQuotaProvider>
+          </ConvexClientProvider>
           <Toaster theme="dark" />
         </body>
       </html>

@@ -162,6 +162,9 @@ export function Header() {
                 ))}
               </NavigationMenuList>
             </NavigationMenu>
+            <SignedIn>
+              <Link href="/history" className="text-gray-100 hover:text-white text-sm">History</Link>
+            </SignedIn>
 
             <SignedOut>
               <SignInButton mode="modal">
@@ -215,6 +218,13 @@ export function Header() {
                   </button>
                 </li>
               ))}
+              <SignedIn>
+                <li>
+                  <Link href="/history" className="w-full block px-4 py-2 text-gray-100 hover:text-blue-400 transition-colors">
+                    History
+                  </Link>
+                </li>
+              </SignedIn>
             </ul>
             <div className="mt-6 border-t border-white/10 pt-4">
               <SignedOut>

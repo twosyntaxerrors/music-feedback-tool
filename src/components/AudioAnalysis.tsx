@@ -8,7 +8,12 @@ import { type Analysis } from "@/types/analysis";
 import { AnnotatedWaveformPlayer } from "./AnnotatedWaveformPlayer";
 import { GlowingEffect } from "./ui/glowing-effect";
 import { ApiQuotaDisplay } from "./api-quota-display";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useUser } from "@clerk/nextjs";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 function TrackOverview({ analysis }: { analysis: Analysis }) {
   return (
@@ -309,9 +314,15 @@ interface AudioAnalysisProps {
   audioFile: File | null;
   audioUrl: string | null;
   onReset?: () => void;
+  hideSaveButton?: boolean;
+  hideQuotaDisplay?: boolean;
 }
 
-export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset }: AudioAnalysisProps) {
+export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset, hideSaveButton, hideQuotaDisplay }: AudioAnalysisProps) {
+  const { user } = useUser();
+  const saveAnalysis = useMutation(api.analyses.saveAnalysis);
+  const [isSaving, setIsSaving] = useState(false);
+  const router = useRouter();
   // Add logging to debug data flow
   useEffect(() => {
     console.log('🔍 AudioAnalysis - Component rendered with analysis:', analysis);
@@ -419,17 +430,65 @@ export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset }: AudioA
         <h2 className="text-2xl font-bold text-white">
           Analysis Results
         </h2>
-        {onReset && (
-          <button 
-            onClick={onReset}
-            className="relative inline-flex h-12 overflow-hidden rounded-md p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50"
-          >
-            <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)]" />
-            <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-md bg-slate-950 px-3 py-1 text-sm font-medium text-white backdrop-blur-3xl">
-              New Analysis
-            </span>
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {user && !hideSaveButton && (
+            <button
+              onClick={async () => {
+                if (isSaving) return;
+                setIsSaving(true);
+                try {
+                  const result = await saveAnalysis({
+                    userId: user.id,
+                    audioFileName: audioFile?.name,
+                    audioFileSize: audioFile ? audioFile.size : undefined,
+                    audioUrl: audioUrl || undefined,
+                    analysis,
+                  });
+                  toast.success("Analysis saved to history!", {
+                    description: `"${audioFile?.name || 'Untitled'}" has been saved with all feedback details.`,
+                    duration: 4000,
+                    action: {
+                      label: "View",
+                      onClick: () => {
+                        if ((result as any)?.id) {
+                          router.push(`/history/${(result as any).id}`);
+                        } else {
+                          router.push("/history");
+                        }
+                      }
+                    }
+                  });
+                } catch (e) {
+                  console.error(e);
+                  toast.error("Failed to save analysis", {
+                    description: "Please try again or check your connection.",
+                    duration: 4000,
+                  });
+                } finally {
+                  setIsSaving(false);
+                }
+              }}
+              disabled={isSaving}
+              className="relative inline-flex h-12 overflow-hidden rounded-md p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#34d399_0%,#059669_50%,#34d399_100%)]" />
+              <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-md bg-slate-950 px-3 py-1 text-sm font-medium text-white backdrop-blur-3xl">
+                {isSaving ? "Saving..." : "Save to History"}
+              </span>
+            </button>
+          )}
+          {onReset && (
+            <button 
+              onClick={onReset}
+              className="relative inline-flex h-12 overflow-hidden rounded-md p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50"
+            >
+              <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)]" />
+              <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-md bg-slate-950 px-3 py-1 text-sm font-medium text-white backdrop-blur-3xl">
+                New Analysis
+              </span>
+            </button>
+          )}
+        </div>
       </div>
 
       {audioFile && audioUrl && (
@@ -469,9 +528,11 @@ export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset }: AudioA
       <DetailedAnalysis analysis={analysis} />
 
       {/* Compact API Quota Display at Bottom */}
-      <div className="pt-4">
-        <ApiQuotaDisplay />
-      </div>
+      {!hideQuotaDisplay && (
+        <div className="pt-4">
+          <ApiQuotaDisplay />
+        </div>
+      )}
 
       {/* Additional New Analysis Button at Bottom */}
       {onReset && (

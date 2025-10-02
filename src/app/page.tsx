@@ -12,6 +12,7 @@ import { HeroSection } from "@/components/hero-section"
 import { type Analysis } from "@/types/analysis"
 import { FaqSection } from "@/components/ui/faq-section"
 import { ApiQuotaProvider } from "@/lib/contexts/ApiQuotaContext"
+// Removed inline history from homepage; dedicated history route is available
 
 export default function AIAudioAnalysisLanding() {
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
@@ -87,6 +88,14 @@ export default function AIAudioAnalysisLanding() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleSelectSaved = (item: any) => {
+    if (!item) return;
+    setAnalysis(item.analysis);
+    setAudioFile(null);
+    setAudioUrl(item.audioUrl ?? null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <ApiQuotaProvider>
       <div className="min-h-screen bg-black text-gray-100 relative overflow-hidden">
@@ -153,6 +162,7 @@ export default function AIAudioAnalysisLanding() {
               <section id="features" className="w-full">
                 <Features />
               </section>
+              {/* History moved to /history, accessible from the header and save toast */}
               
               {/* <section id="testimonials" className="w-full">
                 <TestimonialsComponent />
