@@ -30,8 +30,7 @@ A powerful web application that provides AI-powered feedback and analysis for yo
 - **Backend**: Next.js API Routes
 - **AI Integration**: Google Gemini AI for audio analysis
 - **Authentication**: Clerk for user management and sessions
-- **Storage**: Firebase Storage for audio files
-- **Database**: Firebase Realtime Database for user data
+- **Database**: Convex for analysis history and user data
 
 ## Getting Started
 
@@ -47,11 +46,12 @@ npm install
 ```
 
 3. Set up environment variables:
-Create a `.env.local` file in the root directory with the following variables (**see `.env.example` for placeholders**):
+Create a `.env.local` file in the root directory with the following variables:
 ```
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
 CLERK_SECRET_KEY=
 GOOGLE_AI_API_KEY=
+CONVEX_DEPLOYMENT=
 ```
 
 4. Run the development server:

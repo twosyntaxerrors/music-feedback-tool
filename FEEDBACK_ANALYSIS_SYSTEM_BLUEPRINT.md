@@ -15,8 +15,8 @@ This document provides a comprehensive technical specification for replicating t
          │                       │                       │
          ▼                       ▼                       ▼
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Firebase      │    │   File Storage  │    │   Audio         │
-│   (Auth/DB)     │    │   (Temporary)   │    │   Processing    │
+│   Convex        │    │   File Storage  │    │   Audio         │
+│   (Database)    │    │   (Temporary)   │    │   Processing    │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
@@ -39,7 +39,7 @@ This document provides a comprehensive technical specification for replicating t
     "react": "^18",
     "framer-motion": "^11.18.2",
     "wavesurfer.js": "^7.9.4",
-    "firebase": "^10.13.0",
+    "convex": "^1.27.3",
     "lucide-react": "^0.436.0",
     "tailwindcss": "^3.4.1"
   }
@@ -52,13 +52,8 @@ This document provides a comprehensive technical specification for replicating t
 # Google AI
 GOOGLE_AI_API_KEY=your_gemini_api_key
 
-# Firebase (Optional - for user management)
-NEXT_PUBLIC_FIREBASE_API_KEY=
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
-NEXT_PUBLIC_FIREBASE_APP_ID=
+# Convex (Required - for database)
+CONVEX_DEPLOYMENT=your_convex_deployment_url
 ```
 
 ### 2.3 Data Structures

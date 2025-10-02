@@ -8,7 +8,7 @@ import { type Analysis } from "@/types/analysis";
 import { AnnotatedWaveformPlayer } from "./AnnotatedWaveformPlayer";
 import { GlowingEffect } from "./ui/glowing-effect";
 import { ApiQuotaDisplay } from "./api-quota-display";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -17,13 +17,13 @@ import { useRouter } from "next/navigation";
 
 function TrackOverview({ analysis }: { analysis: Analysis }) {
   return (
-    <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300 relative">
+    <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300 relative transform-gpu will-change-transform hover:-translate-y-0.5 hover:bg-white/5">
       <GlowingEffect
         blur={0}
         borderWidth={1}
         spread={80}
         glow={true}
-        disabled={false}
+        disabled={true}
         proximity={64}
         inactiveZone={0.01}
       />
@@ -163,13 +163,13 @@ function PerformanceMetrics({ analysis }: { analysis: Analysis }) {
   }) : [];
 
   return (
-    <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300 relative">
+    <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300 relative transform-gpu will-change-transform hover:-translate-y-0.5 hover:bg-white/5">
       <GlowingEffect
         blur={0}
         borderWidth={1}
         spread={80}
         glow={true}
-        disabled={false}
+        disabled={true}
         proximity={64}
         inactiveZone={0.01}
       />
@@ -213,13 +213,13 @@ function KeyInsights({ analysis }: { analysis: Analysis }) {
   };
 
   return (
-    <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300 relative md:col-span-2">
+    <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300 relative md:col-span-2 transform-gpu will-change-transform hover:-translate-y-0.5 hover:bg-white/5">
       <GlowingEffect
         blur={0}
         borderWidth={1}
         spread={80}
         glow={true}
-        disabled={false}
+        disabled={true}
         proximity={64}
         inactiveZone={0.01}
       />
@@ -273,13 +273,13 @@ function DetailedAnalysis({ analysis }: { analysis: Analysis }) {
   ].filter(section => section.content);
 
   return (
-    <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300 relative md:col-span-2">
+    <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300 relative md:col-span-2 transform-gpu will-change-transform hover:-translate-y-0.5 hover:bg-white/5">
       <GlowingEffect
         blur={0}
         borderWidth={1}
         spread={80}
         glow={true}
-        disabled={false}
+        disabled={true}
         proximity={64}
         inactiveZone={0.01}
       />
@@ -322,7 +322,10 @@ export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset, hideSave
   const { user } = useUser();
   const saveAnalysis = useMutation(api.analyses.saveAnalysis);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const router = useRouter();
+  const hasAutoSavedRef = useRef<boolean>(false);
+  const isAutoSavingRef = useRef<boolean>(false);
   // Add logging to debug data flow
   useEffect(() => {
     console.log('🔍 AudioAnalysis - Component rendered with analysis:', analysis);
@@ -331,6 +334,67 @@ export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset, hideSave
     console.log('🔍 AudioAnalysis - Has audioFile:', !!audioFile);
     console.log('🔍 AudioAnalysis - Has audioUrl:', !!audioUrl);
   }, [analysis, audioFile, audioUrl]);
+
+  // Automatically save analysis to history when available (only on main analysis view)
+  useEffect(() => {
+    if (!user) return;
+    if (!analysis || (analysis as any).error) return;
+    if (hideSaveButton) return; // history/detail views pass this flag; skip autosave there
+    if (hasAutoSavedRef.current || isAutoSavingRef.current) return;
+    if (!audioFile && !audioUrl) return;
+
+    let cancelled = false;
+    const run = async () => {
+      try {
+        // Guard against React StrictMode double-invocation and rapid re-renders
+        isAutoSavingRef.current = true;
+        hasAutoSavedRef.current = true;
+        setIsSaving(true);
+        const result = await saveAnalysis({
+          userId: user.id,
+          audioFileName: audioFile?.name,
+          audioFileSize: audioFile ? audioFile.size : undefined,
+          audioUrl: audioUrl || undefined,
+          analysis,
+        });
+        if (cancelled) return;
+        hasAutoSavedRef.current = true;
+        setIsSaved(true);
+        toast.success("Analysis saved to history!", {
+          description: `"${audioFile?.name || 'Untitled'}" has been saved with all feedback details.`,
+          duration: 4000,
+          action: {
+            label: "View",
+            onClick: () => {
+              if ((result as any)?.id) {
+                router.push(`/history/${(result as any).id}`);
+              } else {
+                router.push("/history");
+              }
+            }
+          }
+        });
+      } catch (e) {
+        console.error(e);
+        toast.error("Failed to save analysis", {
+          description: "Please try again or check your connection.",
+          duration: 4000,
+        });
+      } finally {
+        isAutoSavingRef.current = false;
+        if (!isSaved) {
+          // allow manual save if autosave failed
+          hasAutoSavedRef.current = false;
+        }
+        if (!cancelled) setIsSaving(false);
+      }
+    };
+    run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, analysis, audioFile, audioUrl, hideSaveButton, saveAnalysis, router]);
 
   if (!analysis) {
     console.log('❌ AudioAnalysis - No analysis data, showing loading state');
@@ -468,12 +532,12 @@ export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset, hideSave
                   setIsSaving(false);
                 }
               }}
-              disabled={isSaving}
+              disabled={isSaving || isSaved}
               className="relative inline-flex h-12 overflow-hidden rounded-md p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#34d399_0%,#059669_50%,#34d399_100%)]" />
               <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-md bg-slate-950 px-3 py-1 text-sm font-medium text-white backdrop-blur-3xl">
-                {isSaving ? "Saving..." : "Save to History"}
+                {isSaving ? "Saving..." : isSaved ? "Saved" : "Save to History"}
               </span>
             </button>
           )}
@@ -492,13 +556,13 @@ export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset, hideSave
       </div>
 
       {audioFile && audioUrl && (
-        <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300 relative">
+        <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300 relative transform-gpu will-change-transform hover:-translate-y-0.5 hover:bg-white/5">
           <GlowingEffect
             blur={0}
             borderWidth={1}
             spread={80}
             glow={true}
-            disabled={false}
+            disabled={true}
             proximity={64}
             inactiveZone={0.01}
           />

@@ -111,7 +111,7 @@ export function AnnotatedWaveformPlayer({ audioUrl, analysis }: AnnotatedWavefor
         console.error('❌ Failed to generate AI comments:', data.error);
 
         // Handle specific error types
-        const errorObj = error as any;
+        const errorObj = data as any;
         const statusCode = errorObj.statusCode || 500;
         const errorType = errorObj.errorType || "UNKNOWN_ERROR";
 

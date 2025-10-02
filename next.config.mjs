@@ -18,10 +18,6 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "firebasestorage.googleapis.com",
-      },
-      {
-        protocol: "https",
         hostname: "images.unsplash.com",
       },
     ],

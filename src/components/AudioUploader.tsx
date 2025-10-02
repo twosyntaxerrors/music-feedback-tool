@@ -90,12 +90,14 @@ export function AudioUploader({ onUploadComplete, onError, onReset }: AudioUploa
     if (!authModalRequestedRef.current) {
       authModalRequestedRef.current = true;
       const locationHref = typeof window !== "undefined" ? window.location.href : "/";
-      void openSignIn({
+      openSignIn({
         afterSignInUrl: locationHref,
         afterSignUpUrl: locationHref,
-      }).finally(() => {
-        authModalRequestedRef.current = false;
       });
+      // Reset the flag after a short delay
+      setTimeout(() => {
+        authModalRequestedRef.current = false;
+      }, 1000);
     }
 
     setAuthNotice("Sign in to upload and analyze your audio.");

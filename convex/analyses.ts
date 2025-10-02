@@ -10,6 +10,26 @@ export const saveAnalysis = mutationGeneric({
     analysis: v.any(),
   },
   handler: async (ctx, args) => {
+    // Check for a very recent duplicate submission (same user + filename/size/url within ~5 minutes)
+    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+    const recent = await ctx.db
+      .query("analyses")
+      .withIndex("by_user_created", (q) => q.eq("userId", args.userId))
+      .order("desc")
+      .take(10);
+
+    const existing = recent.find((r) => {
+      if (r.createdAt < fiveMinutesAgo) return false;
+      const sameName = (r.audioFileName || "") === (args.audioFileName || "");
+      const sameSize = (r.audioFileSize || 0) === (args.audioFileSize || 0);
+      const sameUrl = (r.audioUrl || "") === (args.audioUrl || "");
+      return sameName && sameSize && sameUrl;
+    });
+
+    if (existing) {
+      return { id: existing._id };
+    }
+
     const doc = {
       userId: args.userId,
       audioFileName: args.audioFileName,

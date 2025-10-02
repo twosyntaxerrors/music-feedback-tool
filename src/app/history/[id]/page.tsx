@@ -9,7 +9,7 @@ import Link from "next/link";
 export default function HistoryDetailPage() {
   const params = useParams();
   const id = params?.id as string;
-  const item = useQuery(api.analyses.getAnalysisById, id ? { id } : "skip");
+  const item = useQuery(api.analyses.getAnalysisById, id ? { id: id as any } : "skip");
 
   if (!id) return null;
 
