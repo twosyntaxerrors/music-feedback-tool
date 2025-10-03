@@ -1,4 +1,5 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import type { GenerationConfig, Schema } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
 import { getAuth } from "@clerk/nextjs/server";
 
@@ -139,10 +140,11 @@ function validateAnalysisPayload(payload: unknown) {
 export async function POST(req: NextRequest) {
   try {
     const { userId } = getAuth(req);
-
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    console.debug("[audio-analysis] route entry", {
+      authenticated: Boolean(userId),
+      method: req.method,
+      contentType: req.headers.get("content-type") || null,
+    });
 
     const formData = await req.formData();
     const file = formData.get("file");
@@ -160,7 +162,7 @@ export async function POST(req: NextRequest) {
     }
 
     const requestMeta = {
-      userId,
+      userId: userId || null,
       fileName: file.name,
       fileSizeBytes: file.size,
       fileType: file.type,
@@ -179,25 +181,119 @@ export async function POST(req: NextRequest) {
       base64Chars: base64String.length,
     });
 
-    const primaryModelId = "gemini-2.5-pro";
-    const fallbackModelId = "gemini-2.5-flash";
-    const generationConfig = {
-      temperature: 0.1,
-      topP: 0.8,
-      topK: 40,
-      maxOutputTokens: 2048,
-    } as const;
+    const signedInModelId = "gemini-2.5-pro";
+    const guestModelId = "gemini-2.5-flash";
+  const responseSchema: Schema = {
+    type: SchemaType.OBJECT,
+    properties: {
+      track_type: { type: SchemaType.STRING },
+      primary_genre: { type: SchemaType.STRING },
+      secondary_influences: {
+        type: SchemaType.ARRAY,
+        items: { type: SchemaType.STRING },
+      },
+      key_instruments: {
+        type: SchemaType.ARRAY,
+        items: { type: SchemaType.STRING },
+      },
+      mood_tags: {
+        type: SchemaType.ARRAY,
+        items: { type: SchemaType.STRING },
+      },
+      scores: {
+        type: SchemaType.OBJECT,
+        properties: {
+          melody: { type: SchemaType.INTEGER },
+          harmony: { type: SchemaType.INTEGER },
+          rhythm: { type: SchemaType.INTEGER },
+          production: { type: SchemaType.INTEGER },
+        },
+        required: ["melody", "harmony", "rhythm", "production"],
+      },
+      strengths: {
+        type: SchemaType.ARRAY,
+        items: { type: SchemaType.STRING },
+      },
+      improvements: {
+        type: SchemaType.ARRAY,
+        items: { type: SchemaType.STRING },
+      },
+      analysis: {
+        type: SchemaType.OBJECT,
+        properties: {
+          composition: { type: SchemaType.STRING },
+          production: { type: SchemaType.STRING },
+          arrangement: { type: SchemaType.STRING },
+          instrument_interplay: { type: SchemaType.STRING },
+          musical_journey: { type: SchemaType.STRING },
+          lyrics: { type: SchemaType.STRING },
+        },
+        required: [
+          "composition",
+          "production",
+          "arrangement",
+          "instrument_interplay",
+          "musical_journey",
+        ],
+      },
+      visualization: {
+        type: SchemaType.OBJECT,
+        properties: {
+          type: { type: SchemaType.STRING },
+          categories: {
+            type: SchemaType.ARRAY,
+            items: { type: SchemaType.STRING },
+          },
+          values: {
+            type: SchemaType.ARRAY,
+            items: { type: SchemaType.NUMBER },
+          },
+          min: { type: SchemaType.INTEGER },
+          max: { type: SchemaType.INTEGER },
+          thresholds: {
+            type: SchemaType.ARRAY,
+            items: {
+              type: SchemaType.OBJECT,
+              properties: {
+                value: { type: SchemaType.INTEGER },
+                label: { type: SchemaType.STRING },
+              },
+              required: ["value", "label"],
+            },
+          },
+        },
+      },
+    },
+    required: [
+      "track_type",
+      "primary_genre",
+      "scores",
+      "strengths",
+      "improvements",
+      "analysis",
+    ],
+  };
 
-    let usedModelId = primaryModelId;
+  const generationConfig: GenerationConfig = {
+    temperature: 0.1,
+    topP: 0.8,
+    topK: 40,
+    maxOutputTokens: 4096,
+    responseMimeType: "application/json",
+    responseSchema,
+  };
+
+    // Choose model based on auth: Pro for signed-in, Flash for guests
+    let usedModelId = userId ? signedInModelId : guestModelId;
     let result;
 
     try {
       const modelPrimary = genAI.getGenerativeModel({
-        model: primaryModelId,
+        model: usedModelId,
         generationConfig,
       });
 
-      console.time(`[audio-analysis] ${primaryModelId} generateContent`);
+      console.time(`[audio-analysis] ${usedModelId} generateContent`);
       result = await modelPrimary.generateContent([
         {
           inlineData: {
@@ -208,10 +304,11 @@ export async function POST(req: NextRequest) {
         { text: "Analyze this audio file and provide feedback in the specified JSON format." },
         { text: SYSTEM_PROMPT },
       ]);
-      console.timeEnd(`[audio-analysis] ${primaryModelId} generateContent`);
+      console.timeEnd(`[audio-analysis] ${usedModelId} generateContent`);
     } catch (primaryError) {
+      const fallbackModelId = userId ? "gemini-2.5-flash" : "gemini-2.5-flash";
       console.warn(
-        `[audio-analysis] Primary model failed (${primaryModelId}); attempting fallback (${fallbackModelId}).`,
+        `[audio-analysis] Primary model failed (${usedModelId}); attempting fallback (${fallbackModelId}).`,
         primaryError,
       );
 
@@ -249,18 +346,48 @@ export async function POST(req: NextRequest) {
     }
 
     const jsonString = sanitizeJsonString(rawText);
+    if (!jsonString) {
+      console.error("[audio-analysis] sanitizeJsonString produced empty string. Raw response preview:", rawText.slice(0, 500));
+    }
 
     if (!jsonString) {
       throw new Error("Could not locate JSON object in the AI response");
     }
 
-    const analysisData = validateAnalysisPayload(JSON.parse(jsonString));
+    let parsed: any;
+    try {
+      parsed = JSON.parse(jsonString);
+    } catch (e) {
+      const err = e as Error & { message?: string };
+      // Try to extract the position from the error message if present
+      const match = err.message?.match(/position (\d+)/i);
+      const pos = match ? Number(match[1]) : -1;
+      const contextStart = Math.max(0, pos - 80);
+      const contextEnd = Math.min(jsonString.length, pos + 80);
+      const contextSnippet = jsonString.slice(contextStart, contextEnd);
+      const charAt = pos >= 0 ? jsonString.charAt(pos) : undefined;
+      const charCode = pos >= 0 ? jsonString.charCodeAt(pos) : undefined;
+      console.error("[audio-analysis] JSON.parse failed", {
+        error: err.message,
+        pos,
+        contextSnippet,
+        charAt,
+        charCode,
+        jsonPreviewStart: jsonString.slice(0, 200),
+        jsonPreviewEnd: jsonString.slice(-200),
+      });
+      throw e;
+    }
+
+    const analysisData = validateAnalysisPayload(parsed);
 
     // Add flag to indicate that AI comments should be generated separately
     const responseData = {
       ...analysisData,
       hasAIComments: false,
-      commentsEndpoint: '/api/gemini/audio-comments'
+      commentsEndpoint: '/api/gemini/audio-comments',
+      modelUsed: usedModelId,
+      accessLevel: userId ? 'pro' : 'guest'
     };
 
     return NextResponse.json(responseData);
@@ -283,11 +410,7 @@ export async function POST(req: NextRequest) {
     let errorType = "UNKNOWN_ERROR";
     let userMessage = "Something went wrong while analyzing your audio file. Please try again.";
 
-    if (errorMessage === "Unauthorized") {
-      statusCode = 401;
-      errorType = "UNAUTHORIZED";
-      userMessage = "Authentication required. Please sign in to continue.";
-    } else if (isRateLimitError) {
+    if (isRateLimitError) {
       statusCode = 429;
       errorType = "RATE_LIMIT_EXCEEDED";
       userMessage = "Too many requests. Please wait a moment before trying again.";

@@ -15,7 +15,7 @@ import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
-function TrackOverview({ analysis }: { analysis: Analysis }) {
+function TrackOverview({ analysis, isGuest }: { analysis: Analysis; isGuest?: boolean }) {
   return (
     <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300 relative transform-gpu will-change-transform hover:-translate-y-0.5 hover:bg-white/5">
       <GlowingEffect
@@ -126,7 +126,7 @@ function MetricGauge({ name, score, rating, color }: { name: string; score: numb
   );
 }
 
-function PerformanceMetrics({ analysis }: { analysis: Analysis }) {
+function PerformanceMetrics({ analysis, isGuest }: { analysis: Analysis; isGuest?: boolean }) {
   const getMetricData = (score: number | undefined, metricName: string) => {
     const numScore = score || 0;
     const colors = {
@@ -179,15 +179,26 @@ function PerformanceMetrics({ analysis }: { analysis: Analysis }) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {metrics.map((metric) => (
-          <MetricGauge key={metric.name} {...metric} />
-        ))}
+        <div className={isGuest ? 'relative' : ''}>
+          <div className={isGuest ? 'filter blur-sm select-none pointer-events-none' : ''}>
+            {metrics.map((metric) => (
+              <MetricGauge key={metric.name} {...metric} />
+            ))}
+          </div>
+          {isGuest && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="px-3 py-1 text-xs rounded bg-white/10 border border-white/20 text-white/80">
+                Sign in to unlock full performance scores
+              </div>
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
 }
 
-function KeyInsights({ analysis }: { analysis: Analysis }) {
+function KeyInsights({ analysis, isGuest }: { analysis: Analysis; isGuest?: boolean }) {
   const insights = [];
 
   // Add strengths as positive insights
@@ -229,24 +240,35 @@ function KeyInsights({ analysis }: { analysis: Analysis }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        {insights.map((insight, index) => (
-          <motion.div
-            key={index}
-            className="flex items-start p-2 rounded-lg bg-black/40 border border-white/20"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2, delay: index * 0.05 }}
-          >
-            <div className="mr-3 mt-1">{iconMap[insight.type as keyof typeof iconMap]}</div>
-            <p className="text-sm text-white/90">{insight.content}</p>
-          </motion.div>
-        ))}
+        <div className={isGuest ? 'relative' : ''}>
+          <div className={isGuest ? 'filter blur-sm select-none pointer-events-none space-y-2' : 'space-y-2'}>
+            {insights.map((insight, index) => (
+              <motion.div
+                key={index}
+                className="flex items-start p-2 rounded-lg bg-black/40 border border-white/20"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, delay: index * 0.05 }}
+              >
+                <div className="mr-3 mt-1">{iconMap[insight.type as keyof typeof iconMap]}</div>
+                <p className="text-sm text-white/90">{insight.content}</p>
+              </motion.div>
+            ))}
+          </div>
+          {isGuest && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="px-3 py-1 text-xs rounded bg-white/10 border border-white/20 text-white/80">
+                Sign in to unlock suggestions
+              </div>
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
 }
 
-function DetailedAnalysis({ analysis }: { analysis: Analysis }) {
+function DetailedAnalysis({ analysis, isGuest }: { analysis: Analysis; isGuest?: boolean }) {
   if (typeof analysis.analysis === 'string' || !analysis.analysis) return null;
 
   const sections = [
@@ -289,21 +311,32 @@ function DetailedAnalysis({ analysis }: { analysis: Analysis }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {sections.map((section, index) => (
-          <motion.div
-            key={section.title}
-            className="p-4 rounded-lg bg-black/40 border border-white/20"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2, delay: index * 0.1 }}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              {section.icon}
-              <h3 className="text-sm font-medium text-white">{section.title}</h3>
+        <div className={isGuest ? 'relative' : ''}>
+          <div className={isGuest ? 'filter blur-sm select-none pointer-events-none space-y-4' : 'space-y-4'}>
+            {sections.map((section, index) => (
+              <motion.div
+                key={section.title}
+                className="p-4 rounded-lg bg-black/40 border border-white/20"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, delay: index * 0.1 }}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  {section.icon}
+                  <h3 className="text-sm font-medium text-white">{section.title}</h3>
+                </div>
+                <p className="text-sm text-white/80 leading-relaxed">{section.content}</p>
+              </motion.div>
+            ))}
+          </div>
+          {isGuest && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="px-3 py-1 text-xs rounded bg-white/10 border border-white/20 text-white/80">
+                Sign in to unlock detailed analysis
+              </div>
             </div>
-            <p className="text-sm text-white/80 leading-relaxed">{section.content}</p>
-          </motion.div>
-        ))}
+          )}
+        </div>
       </CardContent>
     </Card>
   );
@@ -584,15 +617,15 @@ export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset, hideSave
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <TrackOverview analysis={analysis} />
-        <PerformanceMetrics analysis={analysis} />
+        <TrackOverview analysis={analysis} isGuest={!user} />
+        <PerformanceMetrics analysis={analysis} isGuest={!user} />
       </div>
 
-      <KeyInsights analysis={analysis} />
-      <DetailedAnalysis analysis={analysis} />
+      <KeyInsights analysis={analysis} isGuest={!user} />
+      <DetailedAnalysis analysis={analysis} isGuest={!user} />
 
-      {/* Compact API Quota Display at Bottom */}
-      {!hideQuotaDisplay && (
+      {/* Compact API Quota Display at Bottom (hide for guests) */}
+      {!hideQuotaDisplay && user && (
         <div className="pt-4">
           <ApiQuotaDisplay />
         </div>

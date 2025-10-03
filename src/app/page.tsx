@@ -129,12 +129,7 @@ export default function AIAudioAnalysisLanding() {
                       <div className="text-red-400 text-6xl mb-4">⚠️</div>
                       <h2 className="text-2xl font-bold text-white mb-4">Analysis Failed</h2>
                       <p className="text-gray-300 mb-6">
-                        {error.includes('Could not find valid JSON') 
-                          ? "The AI analysis couldn't process your audio file properly. This might be due to file format issues or the AI service being temporarily unavailable."
-                          : error.includes('API key') 
-                          ? "There's an issue with the API configuration. Please check your settings."
-                          : "Something went wrong while analyzing your audio file. Please try again."
-                        }
+                        {error}
                       </p>
                       <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <button

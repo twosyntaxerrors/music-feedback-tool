@@ -108,24 +108,15 @@ export function AudioUploader({ onUploadComplete, onError, onReset }: AudioUploa
   const handleFileChange = (files: File[]) => {
     const file = files[0];
     if (file) {
-      const processSelection = () => finalizeSelection(file);
-
-      if (!ensureSignedIn(processSelection)) {
-        return;
+      finalizeSelection(file);
+      if (!isSignedIn) {
+        setAuthNotice("You're not signed in. We'll run a basic analysis with Gemini 2.5 Flash. Sign in to unlock advanced, in-depth analysis powered by Gemini 2.5 Pro.");
       }
-
-      processSelection();
     }
   };
 
   const uploadFile = async () => {
     if (!selectedFile) return;
-
-    if (!ensureSignedIn(() => {
-      void uploadFile();
-    })) {
-      return;
-    }
 
     // Check if we have remaining API requests
     if (remainingRequests <= 0) {
@@ -240,17 +231,14 @@ export function AudioUploader({ onUploadComplete, onError, onReset }: AudioUploa
   };
 
   const handleRequireAuth = (interaction: "click" | "drop" | "change", files?: File[]) => {
-    if (isSignedIn) {
-      return true;
+    if (!isSignedIn) {
+      if (files && files.length > 0) {
+        const file = files[0];
+        finalizeSelection(file);
+        setAuthNotice("You're not signed in. We'll run a basic analysis with Gemini 2.5 Flash. Sign in to unlock advanced, in-depth analysis powered by Gemini 2.5 Pro.");
+      }
     }
-
-    if (files && files.length > 0) {
-      const file = files[0];
-      pendingActionRef.current = () => finalizeSelection(file);
-    }
-
-    ensureSignedIn();
-    return false;
+    return true;
   };
 
   useEffect(() => {

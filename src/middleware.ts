@@ -1,9 +1,20 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-const isProtectedRoute = createRouteMatcher(["/api/gemini/(.*)"]);
+// Protect only endpoints that require authentication. Allow guests for audio-analysis.
+const isProtectedRoute = createRouteMatcher([
+  "/api/gemini/audio-comments(.*)",
+]);
 
 export default clerkMiddleware((auth, req) => {
-  if (!isProtectedRoute(req)) {
+  const path = new URL(req.url).pathname;
+  const protectedRoute = isProtectedRoute(req);
+  console.debug("[middleware] route check", {
+    path,
+    protected: protectedRoute,
+    method: req.method,
+  });
+
+  if (!protectedRoute) {
     return;
   }
 
