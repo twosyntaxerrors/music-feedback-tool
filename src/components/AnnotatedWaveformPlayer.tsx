@@ -11,9 +11,10 @@ import { AnnotationGenerator, type TemporalAnnotation } from '@/lib/annotationGe
 interface AnnotatedWaveformPlayerProps {
   audioUrl: string;
   analysis: Analysis;
+  showCommentsToggle?: boolean;
 }
 
-export function AnnotatedWaveformPlayer({ audioUrl, analysis }: AnnotatedWaveformPlayerProps) {
+export function AnnotatedWaveformPlayer({ audioUrl, analysis, showCommentsToggle = true }: AnnotatedWaveformPlayerProps) {
   const waveformRef = useRef<HTMLDivElement>(null);
   const wavesurferRef = useRef<WaveSurfer | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -368,51 +369,53 @@ export function AnnotatedWaveformPlayer({ audioUrl, analysis }: AnnotatedWavefor
         </div>
       </div>
 
-      {/* Comments toggle moved to top-right of the card */}
-      <div className="absolute right-4 top-4 z-30">
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-white/80">Comments</span>
-          <button
-            onClick={() => {
-              setCommentsEnabled(prev => {
-                const next = !prev;
-                if (next) {
-                  // Generate AI comments when enabling
-                  generateAIComments();
-                } else {
-                  // Clear comments when disabling
-                  setCurrentComment(null);
-                  setHoveredAvatar(null);
-                  setAiComments([]);
-                }
-                return next;
-              });
-            }}
-            className={`h-9 w-14 rounded-md p-0.5 flex items-center transition-colors ${
-              aiCommentsLoading ? 'bg-yellow-500/60 border border-yellow-500' :
-              commentsEnabled ? 'bg-green-500/60 border border-green-500' :
-              'bg-white/5 border border-white/10'
-            }`}
-            aria-pressed={commentsEnabled}
-            title={
-              aiCommentsLoading ? 'Generating AI comments...' :
-              commentsEnabled ? 'Turn comments off' :
-              'Turn comments on'
-            }
-          >
-            {aiCommentsLoading ? (
-              <div className="h-6 w-6 rounded-full bg-white/90 flex items-center justify-center">
-                <div className="h-3 w-3 border-2 border-transparent border-t-white rounded-full animate-spin" />
-              </div>
-            ) : (
-              <div className={`h-6 w-6 rounded-full bg-white/90 transform transition-transform ${commentsEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
-            )}
-          </button>
+      {/* Comments toggle moved to top-right of the card - hidden for guests */}
+      {showCommentsToggle && (
+        <div className="absolute right-4 top-4 z-30">
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-white/80">Comments</span>
+            <button
+              onClick={() => {
+                setCommentsEnabled(prev => {
+                  const next = !prev;
+                  if (next) {
+                    // Generate AI comments when enabling
+                    generateAIComments();
+                  } else {
+                    // Clear comments when disabling
+                    setCurrentComment(null);
+                    setHoveredAvatar(null);
+                    setAiComments([]);
+                  }
+                  return next;
+                });
+              }}
+              className={`h-9 w-14 rounded-md p-0.5 flex items-center transition-colors ${
+                aiCommentsLoading ? 'bg-yellow-500/60 border border-yellow-500' :
+                commentsEnabled ? 'bg-green-500/60 border border-green-500' :
+                'bg-white/5 border border-white/10'
+              }`}
+              aria-pressed={commentsEnabled}
+              title={
+                aiCommentsLoading ? 'Generating AI comments...' :
+                commentsEnabled ? 'Turn comments off' :
+                'Turn comments on'
+              }
+            >
+              {aiCommentsLoading ? (
+                <div className="h-6 w-6 rounded-full bg-white/90 flex items-center justify-center">
+                  <div className="h-3 w-3 border-2 border-transparent border-t-white rounded-full animate-spin" />
+                </div>
+              ) : (
+                <div className={`h-6 w-6 rounded-full bg-white/90 transform transition-transform ${commentsEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+              )}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* AI Comments Loading Indicator */}
-      {aiCommentsLoading && (
+      {/* AI Comments Loading Indicator (hidden for guests) */}
+      {showCommentsToggle && aiCommentsLoading && (
         <div className="mt-2 p-2 rounded-lg border border-yellow-500/20 bg-yellow-500/10">
           <div className="text-xs text-yellow-400 text-center flex items-center justify-center gap-2">
             <div className="h-3 w-3 border-2 border-transparent border-t-yellow-400 rounded-full animate-spin" />
@@ -473,8 +476,8 @@ export function AnnotatedWaveformPlayer({ audioUrl, analysis }: AnnotatedWavefor
 
       {/* Unified Comment Display - Handles both hover and playback */}
       <div className="mt-4">
-        {/* Show message when comments are disabled */}
-        {!commentsEnabled && !aiCommentsLoading && (
+        {/* Show message when comments are disabled (hidden for guests) */}
+        {showCommentsToggle && !commentsEnabled && !aiCommentsLoading && (
           <div className="p-3 rounded-lg border border-white/10 bg-white/5">
             <div className="text-sm text-white/60 text-center">
               💭 Enable AI comments to see interactive annotations on your track

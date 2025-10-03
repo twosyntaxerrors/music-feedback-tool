@@ -2,14 +2,14 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
-import { AlertCircle, CheckCircle, Info, Music, Waves } from "lucide-react";
+import { AlertCircle, CheckCircle, Info, Music, Waves, Sparkles, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import { type Analysis } from "@/types/analysis";
 import { AnnotatedWaveformPlayer } from "./AnnotatedWaveformPlayer";
 import { GlowingEffect } from "./ui/glowing-effect";
 import { ApiQuotaDisplay } from "./api-quota-display";
 import { useEffect, useRef, useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser, SignInButton } from "@clerk/nextjs";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
@@ -126,6 +126,22 @@ function MetricGauge({ name, score, rating, color }: { name: string; score: numb
   );
 }
 
+function LockedOverlay({ cta }: { cta: string }) {
+  return (
+    <SignInButton mode="modal">
+      <div className="absolute inset-0 z-10 cursor-pointer group">
+        {/* Centered CTA box with subtle glow; whole area is clickable */}
+        <div className="absolute inset-0" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="px-5 py-3 rounded-xl bg-black/60 text-white text-lg font-bold ring-1 ring-white/20 shadow-[0_0_20px_rgba(255,255,255,0.12)] transition-transform duration-200 group-hover:scale-105 group-hover:brightness-110">
+            {cta}
+          </div>
+        </div>
+      </div>
+    </SignInButton>
+  );
+}
+
 function PerformanceMetrics({ analysis, isGuest }: { analysis: Analysis; isGuest?: boolean }) {
   const getMetricData = (score: number | undefined, metricName: string) => {
     const numScore = score || 0;
@@ -180,17 +196,13 @@ function PerformanceMetrics({ analysis, isGuest }: { analysis: Analysis; isGuest
       </CardHeader>
       <CardContent>
         <div className={isGuest ? 'relative' : ''}>
-          <div className={isGuest ? 'filter blur-sm select-none pointer-events-none' : ''}>
+          <div className={isGuest ? 'filter blur-2xl brightness-50 select-none pointer-events-none' : ''}>
             {metrics.map((metric) => (
               <MetricGauge key={metric.name} {...metric} />
             ))}
           </div>
           {isGuest && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="px-3 py-1 text-xs rounded bg-white/10 border border-white/20 text-white/80">
-                Sign in to unlock full performance scores
-              </div>
-            </div>
+            <LockedOverlay cta="Sign in to unlock performance scores" />
           )}
         </div>
       </CardContent>
@@ -223,6 +235,13 @@ function KeyInsights({ analysis, isGuest }: { analysis: Analysis; isGuest?: bool
     info: <Info className="w-4 h-4 text-white" />,
   };
 
+  // Determine which insights remain fully visible for guests: one positive and one negative
+  const positiveIndex = insights.findIndex((i) => i.type === 'positive');
+  const negativeIndex = insights.findIndex((i) => i.type === 'negative');
+  const visibleIndices = new Set<number>();
+  if (positiveIndex >= 0) visibleIndices.add(positiveIndex);
+  if (negativeIndex >= 0) visibleIndices.add(negativeIndex);
+
   return (
     <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300 relative md:col-span-2 transform-gpu will-change-transform hover:-translate-y-0.5 hover:bg-white/5">
       <GlowingEffect
@@ -240,27 +259,28 @@ function KeyInsights({ analysis, isGuest }: { analysis: Analysis; isGuest?: bool
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        <div className={isGuest ? 'relative' : ''}>
-          <div className={isGuest ? 'filter blur-sm select-none pointer-events-none space-y-2' : 'space-y-2'}>
-            {insights.map((insight, index) => (
-              <motion.div
-                key={index}
-                className="flex items-start p-2 rounded-lg bg-black/40 border border-white/20"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2, delay: index * 0.05 }}
-              >
-                <div className="mr-3 mt-1">{iconMap[insight.type as keyof typeof iconMap]}</div>
-                <p className="text-sm text-white/90">{insight.content}</p>
-              </motion.div>
-            ))}
+        <div className={isGuest ? 'relative group' : ''}>
+          <div className="space-y-2">
+            {insights.map((insight, index) => {
+              const keepVisible = !isGuest || visibleIndices.has(index);
+              return (
+                <motion.div
+                  key={index}
+                  className="flex items-start p-2 rounded-lg bg-black/40 border border-white/20"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2, delay: index * 0.05 }}
+                >
+                  <div className="mr-3 mt-1">{iconMap[insight.type as keyof typeof iconMap]}</div>
+                  <p className={keepVisible ? 'text-sm text-white/90' : 'text-sm text-white/90 filter blur-sm select-none'}>
+                    {insight.content}
+                  </p>
+                </motion.div>
+              );
+            })}
           </div>
           {isGuest && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="px-3 py-1 text-xs rounded bg-white/10 border border-white/20 text-white/80">
-                Sign in to unlock suggestions
-              </div>
-            </div>
+            <LockedOverlay cta="Sign in to unlock all insights" />
           )}
         </div>
       </CardContent>
@@ -311,30 +331,32 @@ function DetailedAnalysis({ analysis, isGuest }: { analysis: Analysis; isGuest?:
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className={isGuest ? 'relative' : ''}>
-          <div className={isGuest ? 'filter blur-sm select-none pointer-events-none space-y-4' : 'space-y-4'}>
-            {sections.map((section, index) => (
-              <motion.div
-                key={section.title}
-                className="p-4 rounded-lg bg-black/40 border border-white/20"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2, delay: index * 0.1 }}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  {section.icon}
-                  <h3 className="text-sm font-medium text-white">{section.title}</h3>
-                </div>
-                <p className="text-sm text-white/80 leading-relaxed">{section.content}</p>
-              </motion.div>
-            ))}
+        <div className={isGuest ? 'relative group' : ''}>
+          <div className="space-y-4">
+            {sections.map((section, index) => {
+              const isComposition = section.title === 'Composition';
+              const lockThis = isGuest && !isComposition;
+              return (
+                <motion.div
+                  key={section.title}
+                  className="p-4 rounded-lg bg-black/40 border border-white/20"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2, delay: index * 0.1 }}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    {section.icon}
+                    <h3 className="text-sm font-medium text-white">{section.title}</h3>
+                  </div>
+                  <p className={lockThis ? 'text-sm text-white/80 leading-relaxed filter blur-sm select-none' : 'text-sm text-white/80 leading-relaxed'}>
+                    {section.content}
+                  </p>
+                </motion.div>
+              );
+            })}
           </div>
           {isGuest && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="px-3 py-1 text-xs rounded bg-white/10 border border-white/20 text-white/80">
-                Sign in to unlock detailed analysis
-              </div>
-            </div>
+            <LockedOverlay cta="Sign in to unlock full analysis" />
           )}
         </div>
       </CardContent>
@@ -524,9 +546,29 @@ export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset, hideSave
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-white">
-          Analysis Results
-        </h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-2xl font-bold text-white">
+            Analysis Results
+          </h2>
+          {/* Analysis tier badge */}
+          {user ? (
+            <span
+              className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full text-xs font-semibold text-white bg-gradient-to-r from-indigo-500/80 via-purple-500/80 to-emerald-500/80 ring-1 ring-white/20 shadow-[0_0_20px_rgba(99,102,241,0.25)] backdrop-blur hover:brightness-110 transition-all duration-200 select-none"
+              title="Advanced analysis unlocked"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              Advanced
+            </span>
+          ) : (
+            <span
+              className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full text-xs font-semibold text-white/80 bg-white/5 border border-white/15 ring-1 ring-white/10 backdrop-blur-sm hover:bg-white/8 transition-colors select-none"
+              title="Basic analysis — sign in to unlock advanced"
+            >
+              <Lock className="w-3.5 h-3.5 text-white/70" />
+              Basic
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           {user && !hideSaveButton && (
             <button
@@ -610,7 +652,7 @@ export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset, hideSave
                 <span>{audioFile.name}</span>
                 <span>{(audioFile.size / (1024 * 1024)).toFixed(2)} MB</span>
               </div>
-              <AnnotatedWaveformPlayer audioUrl={audioUrl} analysis={analysis} />
+              <AnnotatedWaveformPlayer audioUrl={audioUrl} analysis={analysis} showCommentsToggle={!!user} />
             </div>
           </CardContent>
         </Card>
