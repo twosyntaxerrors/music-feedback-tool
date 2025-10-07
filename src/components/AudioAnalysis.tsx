@@ -8,7 +8,7 @@ import { type Analysis } from "@/types/analysis";
 import { AnnotatedWaveformPlayer } from "./AnnotatedWaveformPlayer";
 import { GlowingEffect } from "./ui/glowing-effect";
 import { ApiQuotaDisplay } from "./api-quota-display";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useUser, SignInButton } from "@clerk/nextjs";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -291,6 +291,9 @@ function KeyInsights({ analysis, isGuest }: { analysis: Analysis; isGuest?: bool
 function DetailedAnalysis({ analysis, isGuest }: { analysis: Analysis; isGuest?: boolean }) {
   if (typeof analysis.analysis === 'string' || !analysis.analysis) return null;
 
+  const isVocalTrack = analysis.track_type === "Vocal";
+  const narrativeContent = isVocalTrack ? analysis.analysis.lyrics : analysis.analysis.musical_journey;
+
   const sections = [
     {
       title: "Composition",
@@ -308,8 +311,8 @@ function DetailedAnalysis({ analysis, isGuest }: { analysis: Analysis; isGuest?:
       icon: <Music className="w-5 h-5 text-pink-400" />
     },
     {
-      title: analysis.track_type === "Vocal" ? "Lyrics & Delivery" : "Musical Journey",
-      content: analysis.analysis.lyrics || '',
+      title: isVocalTrack ? "Lyrics & Delivery" : "Musical Journey",
+      content: narrativeContent || '',
       icon: <Info className="w-5 h-5 text-purple-400" />
     }
   ].filter(section => section.content);
@@ -376,8 +379,6 @@ interface AudioAnalysisProps {
 export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset, hideSaveButton, hideQuotaDisplay }: AudioAnalysisProps) {
   const { user } = useUser();
   const saveAnalysis = useMutation(api.analyses.saveAnalysis);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
   const router = useRouter();
   const hasAutoSavedRef = useRef<boolean>(false);
   const isAutoSavingRef = useRef<boolean>(false);
@@ -399,12 +400,12 @@ export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset, hideSave
     if (!audioFile && !audioUrl) return;
 
     let cancelled = false;
+    let saveSucceeded = false;
     const run = async () => {
       try {
         // Guard against React StrictMode double-invocation and rapid re-renders
         isAutoSavingRef.current = true;
         hasAutoSavedRef.current = true;
-        setIsSaving(true);
         const result = await saveAnalysis({
           userId: user.id,
           audioFileName: audioFile?.name,
@@ -414,7 +415,7 @@ export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset, hideSave
         });
         if (cancelled) return;
         hasAutoSavedRef.current = true;
-        setIsSaved(true);
+        saveSucceeded = true;
         toast.success("Analysis saved to history!", {
           description: `"${audioFile?.name || 'Untitled'}" has been saved with all feedback details.`,
           duration: 4000,
@@ -437,11 +438,10 @@ export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset, hideSave
         });
       } finally {
         isAutoSavingRef.current = false;
-        if (!isSaved) {
+        if (!saveSucceeded) {
           // allow manual save if autosave failed
           hasAutoSavedRef.current = false;
         }
-        if (!cancelled) setIsSaving(false);
       }
     };
     run();
@@ -570,52 +570,6 @@ export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset, hideSave
           )}
         </div>
         <div className="flex items-center gap-2">
-          {user && !hideSaveButton && (
-            <button
-              onClick={async () => {
-                if (isSaving) return;
-                setIsSaving(true);
-                try {
-                  const result = await saveAnalysis({
-                    userId: user.id,
-                    audioFileName: audioFile?.name,
-                    audioFileSize: audioFile ? audioFile.size : undefined,
-                    audioUrl: audioUrl || undefined,
-                    analysis,
-                  });
-                  toast.success("Analysis saved to history!", {
-                    description: `"${audioFile?.name || 'Untitled'}" has been saved with all feedback details.`,
-                    duration: 4000,
-                    action: {
-                      label: "View",
-                      onClick: () => {
-                        if ((result as any)?.id) {
-                          router.push(`/history/${(result as any).id}`);
-                        } else {
-                          router.push("/history");
-                        }
-                      }
-                    }
-                  });
-                } catch (e) {
-                  console.error(e);
-                  toast.error("Failed to save analysis", {
-                    description: "Please try again or check your connection.",
-                    duration: 4000,
-                  });
-                } finally {
-                  setIsSaving(false);
-                }
-              }}
-              disabled={isSaving || isSaved}
-              className="relative inline-flex h-12 overflow-hidden rounded-md p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#34d399_0%,#059669_50%,#34d399_100%)]" />
-              <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-md bg-slate-950 px-3 py-1 text-sm font-medium text-white backdrop-blur-3xl">
-                {isSaving ? "Saving..." : isSaved ? "Saved" : "Save to History"}
-              </span>
-            </button>
-          )}
           {onReset && (
             <button 
               onClick={onReset}
@@ -689,4 +643,4 @@ export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset, hideSave
       )}
     </div>
   );
-} 
+}

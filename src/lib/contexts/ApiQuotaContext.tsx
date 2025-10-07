@@ -24,6 +24,8 @@ export function ApiQuotaProvider({ children, maxRequests = 100 }: ApiQuotaProvid
   const [nextReset, setNextReset] = useState("")
   const { userId } = useAuth()
   const storageKey = useMemo(() => userId ? `gemini_api_usage_${userId}` : "gemini_api_usage_guest", [userId])
+  const safeMaxRequests = Math.max(0, maxRequests)
+  const remainingRequests = Math.max(0, safeMaxRequests - currentUsage)
 
   // Load usage from localStorage on mount
   useEffect(() => {
@@ -123,10 +125,10 @@ export function ApiQuotaProvider({ children, maxRequests = 100 }: ApiQuotaProvid
 
   const value: ApiQuotaContextType = {
     currentUsage,
-    maxRequests,
+    maxRequests: safeMaxRequests,
     incrementUsage,
     resetUsage,
-    remainingRequests: maxRequests - currentUsage,
+    remainingRequests,
     nextReset
   }
 

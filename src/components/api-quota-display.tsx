@@ -9,6 +9,9 @@ import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 export function ApiQuotaDisplay() {
   const { currentUsage, maxRequests, remainingRequests, nextReset } = useApiQuota()
   const isLowQuota = remainingRequests <= 10
+  const quotaFillPercentage = maxRequests > 0
+    ? Math.min(100, Math.max(0, (remainingRequests / maxRequests) * 100))
+    : 0
 
   const getQuotaColor = () => {
     if (remainingRequests <= 5) return "text-red-400 border-red-500/20 bg-red-500/10"
@@ -52,7 +55,7 @@ export function ApiQuotaDisplay() {
                   remainingRequests <= 30 ? 'bg-yellow-500' :
                   'bg-emerald-500'
                 }`}
-                style={{ width: `${(remainingRequests / maxRequests) * 100}%` }}
+                style={{ width: `${quotaFillPercentage}%` }}
               />
             </div>
             

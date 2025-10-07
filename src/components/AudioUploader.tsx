@@ -110,7 +110,7 @@ export function AudioUploader({ onUploadComplete, onError, onReset }: AudioUploa
     if (file) {
       finalizeSelection(file);
       if (!isSignedIn) {
-        setAuthNotice("You're not signed in. We'll run a basic analysis with Gemini 2.5 Flash. Sign in to unlock advanced, in-depth analysis powered by Gemini 2.5 Pro.");
+        setAuthNotice("You're not signed in. We'll run a basic analysis. Sign in to unlock advanced, in-depth analysis with more detailed insights.");
       }
     }
   };
@@ -235,7 +235,7 @@ export function AudioUploader({ onUploadComplete, onError, onReset }: AudioUploa
       if (files && files.length > 0) {
         const file = files[0];
         finalizeSelection(file);
-        setAuthNotice("You're not signed in. We'll run a basic analysis with Gemini 2.5 Flash. Sign in to unlock advanced, in-depth analysis powered by Gemini 2.5 Pro.");
+        setAuthNotice("You're not signed in. We'll run a basic analysis. Sign in to unlock advanced, in-depth analysis with more detailed insights.");
       }
     }
     return true;
