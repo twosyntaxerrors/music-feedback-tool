@@ -1,3 +1,7 @@
+// COMMENTED OUT: AI Comments feature temporarily disabled for refinement
+// TODO: Re-enable after fine-tuning the AI comments generation
+
+/*
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
 import { getAuth } from "@clerk/nextjs/server";
@@ -9,7 +13,9 @@ if (!apiKey) {
 }
 
 const genAI = new GoogleGenerativeAI(apiKey);
+*/
 
+/*
 const AI_COMMENTS_SYSTEM_PROMPT = `# AI COMMENT GENERATOR
 
 You are an AI assistant that generates engaging, hype-style comments for music tracks based on analysis data.
@@ -79,7 +85,9 @@ type AICommentRequest = {
   analysis: any;
   trackDuration: number;
 };
+*/
 
+/*
 export async function POST(req: NextRequest) {
   try {
     const { userId } = getAuth(req);
@@ -212,4 +220,17 @@ export async function POST(req: NextRequest) {
       { status: statusCode },
     );
   }
+}
+*/
+
+// Temporary placeholder response for disabled feature
+export async function POST(req: NextRequest) {
+  return NextResponse.json(
+    { 
+      success: false, 
+      error: "AI Comments feature is temporarily disabled for refinement",
+      errorType: "FEATURE_DISABLED"
+    },
+    { status: 503 }
+  );
 }

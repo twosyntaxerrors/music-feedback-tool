@@ -1,8 +1,9 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
+// COMMENTED OUT: AI Comments route protection temporarily disabled for refinement
 // Protect only endpoints that require authentication. Allow guests for audio-analysis.
 const isProtectedRoute = createRouteMatcher([
-  "/api/gemini/audio-comments(.*)",
+  // "/api/gemini/audio-comments(.*)", // COMMENTED OUT: AI Comments feature disabled
 ]);
 
 export default clerkMiddleware((auth, req) => {

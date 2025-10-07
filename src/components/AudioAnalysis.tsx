@@ -606,7 +606,8 @@ export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset, hideSave
                 <span>{audioFile.name}</span>
                 <span>{(audioFile.size / (1024 * 1024)).toFixed(2)} MB</span>
               </div>
-              <AnnotatedWaveformPlayer audioUrl={audioUrl} analysis={analysis} showCommentsToggle={!!user} />
+              {/* COMMENTED OUT: AI Comments toggle temporarily disabled for refinement */}
+              <AnnotatedWaveformPlayer audioUrl={audioUrl} analysis={analysis} showCommentsToggle={false} />
             </div>
           </CardContent>
         </Card>

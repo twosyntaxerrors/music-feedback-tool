@@ -26,13 +26,20 @@ export function AnnotatedWaveformPlayer({ audioUrl, analysis, showCommentsToggle
   const [hoveredAvatar, setHoveredAvatar] = useState<TemporalAnnotation | null>(null);
   const [isSeeking, setIsSeeking] = useState(false);
   const [commentCounter, setCommentCounter] = useState(0);
+  // COMMENTED OUT: AI Comments feature temporarily disabled for refinement
+  // TODO: Re-enable after fine-tuning the AI comments generation
+  /*
   // New: toggle to enable/disable comments and avatars
   const [commentsEnabled, setCommentsEnabled] = useState(false);
   const [aiCommentsLoading, setAiCommentsLoading] = useState(false);
   const [aiComments, setAiComments] = useState<TemporalAnnotation[]>([]);
+  */
 
+  // COMMENTED OUT: AI Comments feature temporarily disabled for refinement
   // Generate temporal annotations using AI comments when available
   const annotations = useMemo(() => {
+    // COMMENTED OUT: AI comments functionality
+    /*
     // Return AI comments if available, otherwise return empty array
     if (aiComments.length > 0) {
       console.log('✅ Using AI-generated comments:', aiComments.length);
@@ -44,6 +51,11 @@ export function AnnotatedWaveformPlayer({ audioUrl, analysis, showCommentsToggle
       console.log('🔇 Comments disabled or loading, returning empty array');
       return [];
     }
+    */
+    
+    // Always return empty array when AI comments are disabled
+    console.log('🔇 AI Comments disabled, returning empty array');
+    return [];
 
     // Check if analysis has meaningful data
     const hasAnalysisData = analysis &&
@@ -67,8 +79,10 @@ export function AnnotatedWaveformPlayer({ audioUrl, analysis, showCommentsToggle
       console.error('❌ Error generating annotations:', error);
       return [];
     }
-  }, [analysis, duration, aiComments, commentsEnabled, aiCommentsLoading]);
+  }, [analysis, duration]); // COMMENTED OUT: aiComments, commentsEnabled, aiCommentsLoading
 
+  // COMMENTED OUT: AI Comments feature temporarily disabled for refinement
+  /*
   // Function to generate AI comments when enabled
   const generateAIComments = async () => {
     if (!analysis || duration === 0) {
@@ -163,6 +177,7 @@ export function AnnotatedWaveformPlayer({ audioUrl, analysis, showCommentsToggle
       setAiCommentsLoading(false);
     }
   };
+  */
 
   // Detect seeking and reset comment history when needed
   useEffect(() => {
@@ -369,90 +384,15 @@ export function AnnotatedWaveformPlayer({ audioUrl, analysis, showCommentsToggle
         </div>
       </div>
 
-      {/* Comments toggle moved to top-right of the card - hidden for guests */}
-      {showCommentsToggle && (
-        <div className="absolute right-4 top-4 z-30">
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-white/80">Comments</span>
-            <button
-              onClick={() => {
-                setCommentsEnabled(prev => {
-                  const next = !prev;
-                  if (next) {
-                    // Generate AI comments when enabling
-                    generateAIComments();
-                  } else {
-                    // Clear comments when disabling
-                    setCurrentComment(null);
-                    setHoveredAvatar(null);
-                    setAiComments([]);
-                  }
-                  return next;
-                });
-              }}
-              className={`h-9 w-14 rounded-md p-0.5 flex items-center transition-colors ${
-                aiCommentsLoading ? 'bg-yellow-500/60 border border-yellow-500' :
-                commentsEnabled ? 'bg-green-500/60 border border-green-500' :
-                'bg-white/5 border border-white/10'
-              }`}
-              aria-pressed={commentsEnabled}
-              title={
-                aiCommentsLoading ? 'Generating AI comments...' :
-                commentsEnabled ? 'Turn comments off' :
-                'Turn comments on'
-              }
-            >
-              {aiCommentsLoading ? (
-                <div className="h-6 w-6 rounded-full bg-white/90 flex items-center justify-center">
-                  <div className="h-3 w-3 border-2 border-transparent border-t-white rounded-full animate-spin" />
-                </div>
-              ) : (
-                <div className={`h-6 w-6 rounded-full bg-white/90 transform transition-transform ${commentsEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
-              )}
-            </button>
-          </div>
-        </div>
-      )}
+      {/* COMMENTED OUT: Comments toggle temporarily disabled for refinement */}
 
-      {/* AI Comments Loading Indicator (hidden for guests) */}
-      {showCommentsToggle && aiCommentsLoading && (
-        <div className="mt-2 p-2 rounded-lg border border-yellow-500/20 bg-yellow-500/10">
-          <div className="text-xs text-yellow-400 text-center flex items-center justify-center gap-2">
-            <div className="h-3 w-3 border-2 border-transparent border-t-yellow-400 rounded-full animate-spin" />
-            Generating AI comments...
-          </div>
-        </div>
-      )}
+      {/* COMMENTED OUT: AI Comments Loading Indicator temporarily disabled */}
 
       {/* Waveform with visible annotation avatars */}
       <div className="relative">
         <div ref={waveformRef} className="w-full" />
         
-        {/* Annotation avatars on waveform */}
-        {commentsEnabled && annotations.map((annotation) => (
-          <div
-            key={annotation.id}
-            className="absolute top-0 bottom-0 z-20 flex flex-col items-center"
-            style={{ left: `${getAnnotationPosition(annotation.timestamp)}%` }}
-          >
-            {/* Vertical line indicator */}
-            <div className="w-px h-full bg-white/30" />
-            
-            {/* Avatar icon */}
-            <div 
-              className={`absolute bottom-2 w-6 h-6 rounded-full border-2 flex items-center justify-center cursor-pointer hover:scale-110 transition-all duration-200 ${annotation.avatarColor} ${isSeeking ? 'animate-pulse' : ''} ${hoveredAvatar?.id === annotation.id ? 'border-white scale-110 ring-2 ring-white/50' : 'border-white/30'}`}
-              style={{ 
-                transform: `scale(${0.8 + (annotation.intensity * 0.4)})`,
-                boxShadow: annotation.intensity > 0.8 ? '0 0 10px rgba(255, 255, 255, 0.3)' : 'none'
-              }}
-              onClick={() => handleAvatarClick(annotation)}
-              onMouseEnter={() => handleAvatarHover(annotation)}
-              onMouseLeave={handleAvatarLeave}
-              title={`Click to jump to ${formatTime(annotation.timestamp)}`}
-            >
-            </div>
-          </div>
-        ))}
+        {/* COMMENTED OUT: Annotation avatars temporarily disabled */}
         
         {/* Time indicators */}
         <div className="absolute left-0 bottom-0 z-11 text-[10px] text-white/80 bg-black/75 px-1 py-0.5">
@@ -474,43 +414,7 @@ export function AnnotatedWaveformPlayer({ audioUrl, analysis, showCommentsToggle
 
       
 
-      {/* Unified Comment Display - Handles both hover and playback */}
-      <div className="mt-4">
-        {/* Show message when comments are disabled (hidden for guests) */}
-        {showCommentsToggle && !commentsEnabled && !aiCommentsLoading && (
-          <div className="p-3 rounded-lg border border-white/10 bg-white/5">
-            <div className="text-sm text-white/60 text-center">
-              💭 Enable AI comments to see interactive annotations on your track
-            </div>
-          </div>
-        )}
-
-        {/* Show hover comment if hovering, otherwise show current playback comment */}
-        {commentsEnabled && (hoveredAvatar || currentComment) && (
-          <motion.div 
-            className="p-3 rounded-lg border border-white/20 bg-black/40 backdrop-blur-sm"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            key={`comment-${hoveredAvatar?.id || currentComment?.id || 'none'}-${hoveredAvatar ? 'hover' : 'playback'}`}
-            transition={{ duration: 0.2 }}
-          >
-            <div className="flex items-start gap-3">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${(hoveredAvatar || currentComment)?.avatarColor}`}>
-                {(hoveredAvatar || currentComment)?.type?.charAt(0).toUpperCase() || 'C'}
-              </div>
-              <div className="flex-1">
-                <div className="text-sm text-white/80 leading-relaxed">
-                  {(hoveredAvatar || currentComment)?.description}
-                </div>
-              </div>
-              <div className="text-xs text-white/60">
-                {formatTime((hoveredAvatar || currentComment)?.timestamp || 0)}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </div>
+      {/* COMMENTED OUT: Comment Display temporarily disabled */}
 
       {/* Force trigger some comments for testing */}
     </div>
