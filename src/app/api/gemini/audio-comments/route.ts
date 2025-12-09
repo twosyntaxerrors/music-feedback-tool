@@ -1,3 +1,5 @@
+import { NextRequest, NextResponse } from "next/server";
+
 // COMMENTED OUT: AI Comments feature temporarily disabled for refinement
 // TODO: Re-enable after fine-tuning the AI comments generation
 
