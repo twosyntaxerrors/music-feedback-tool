@@ -4,8 +4,14 @@ import { ReactNode, useMemo } from "react";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 
 export function ConvexClientProvider({ children }: { children: ReactNode }) {
-  const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
-  const client = useMemo(() => new ConvexReactClient(convexUrl || ""), [convexUrl]);
+  const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL || process.env.CONVEX_DEPLOYMENT;
+
+  if (!convexUrl) {
+    console.error("Missing Convex URL. Set NEXT_PUBLIC_CONVEX_URL or CONVEX_DEPLOYMENT.");
+    return <>{children}</>;
+  }
+
+  const client = useMemo(() => new ConvexReactClient(convexUrl), [convexUrl]);
   return <ConvexProvider client={client}>{children}</ConvexProvider>;
 }
 

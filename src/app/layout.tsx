@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Righteous } from "next/font/google";
+import { Inter, Righteous, Syne, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { ClerkProvider } from "@clerk/nextjs";
@@ -11,6 +11,14 @@ const righteous = Righteous({
   weight: "400",
   subsets: ["latin"],
   variable: "--font-righteous",
+});
+const syne = Syne({ 
+  subsets: ["latin"],
+  variable: "--font-syne",
+});
+const jetbrainsMono = JetBrains_Mono({ 
+  subsets: ["latin"],
+  variable: "--font-mono",
 });
 
 export const metadata: Metadata = {
@@ -87,7 +95,7 @@ export default function RootLayout({
       }}
     >
       <html lang="en" className="dark">
-        <body className={`${inter.className} ${righteous.variable} bg-background text-foreground`}>
+        <body className={`${inter.className} ${righteous.variable} ${syne.variable} ${jetbrainsMono.variable} bg-background text-foreground`}>
           <ConvexClientProvider>
             <ApiQuotaProvider>
               {children}

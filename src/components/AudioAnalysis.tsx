@@ -2,127 +2,268 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
-import { AlertCircle, CheckCircle, Info, Music, Waves, Sparkles, Lock } from "lucide-react";
-import { motion } from "framer-motion";
+import { Icon } from "@iconify/react";
+import { motion, AnimatePresence } from "framer-motion";
 import { type Analysis } from "@/types/analysis";
 import { AnnotatedWaveformPlayer } from "./AnnotatedWaveformPlayer";
 import { GlowingEffect } from "./ui/glowing-effect";
+import { TiltWrapper } from "./ui/tilt-wrapper";
 import { ApiQuotaDisplay } from "./api-quota-display";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useUser, SignInButton } from "@clerk/nextjs";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
-function TrackOverview({ analysis, isGuest }: { analysis: Analysis; isGuest?: boolean }) {
+// Circular Gauge Component - Apple Style
+function CircularGauge({ score, label, color, size = 120 }: { score: number; label: string; color: string; size?: number }) {
+  const strokeWidth = 6; // Thinner, more elegant
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (score / 100) * circumference;
+  
+  // Apple-style simplified colors
+  const colorClasses: Record<string, string> = {
+    emerald: "text-emerald-400 stroke-emerald-400",
+    blue: "text-blue-400 stroke-blue-400",
+    amber: "text-amber-400 stroke-amber-400",
+    violet: "text-white stroke-white", // Changed from violet to white for cleaner look
+  };
+
+  const colorClass = colorClasses[color] || colorClasses.emerald;
+  
+  const getRating = (score: number) => {
+    if (score >= 90) return "Exceptional";
+    if (score >= 80) return "Strong";
+    if (score >= 70) return "Good";
+    if (score >= 60) return "Decent";
+    return "Needs Work";
+  };
+
   return (
-    <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300 relative transform-gpu will-change-transform hover:-translate-y-0.5 hover:bg-white/5">
-      <GlowingEffect
-        blur={0}
-        borderWidth={1}
-        spread={80}
-        glow={true}
-        disabled={true}
-        proximity={64}
-        inactiveZone={0.01}
-      />
-      <CardHeader className="pb-4">
-        <CardTitle className="text-xl font-bold text-white">
-          Track Overview
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-sm font-medium mb-2 text-white">Genre & Type</h3>
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="secondary" className="bg-black/40 border border-blue-400/40 text-blue-400 hover:bg-black/60 hover:border-blue-400">
-                {analysis.primary_genre || 'Unknown Genre'}
-              </Badge>
-              {analysis.track_type && (
-                <Badge variant="secondary" className="bg-black/40 border border-purple-400/40 text-purple-400 hover:bg-black/60 hover:border-purple-400">
-                  {analysis.track_type}
-                </Badge>
-              )}
-            </div>
-          </div>
-          
-          {analysis.secondary_influences && analysis.secondary_influences.length > 0 && (
-            <div>
-              <h3 className="text-sm font-medium mb-2 text-white">Musical Influences</h3>
-              <div className="flex flex-wrap gap-2">
-                {analysis.secondary_influences.map((influence, i) => (
-                  <Badge
-                    key={i}
-                    variant="secondary"
-                    className="bg-black/40 border border-green-400/40 text-green-400 hover:bg-black/60 hover:border-green-400"
-                  >
-                    {influence}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {analysis.key_instruments && analysis.key_instruments.length > 0 && (
-            <div>
-              <h3 className="text-sm font-medium mb-2 text-white">Key Instruments</h3>
-              <div className="flex flex-wrap gap-2">
-                {analysis.key_instruments.map((instrument, i) => (
-                  <Badge
-                    key={i}
-                    variant="secondary"
-                    className="bg-black/40 border border-yellow-400/40 text-yellow-400 hover:bg-black/60 hover:border-yellow-400"
-                  >
-                    {instrument}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {analysis.mood_tags && analysis.mood_tags.length > 0 && (
-            <div>
-              <h3 className="text-sm font-medium mb-2 text-white">Mood</h3>
-              <div className="flex flex-wrap gap-2">
-                {analysis.mood_tags.map((tag, i) => (
-                  <Badge
-                    key={i}
-                    variant="secondary"
-                    className="bg-black/40 border border-pink-400/40 text-pink-400 hover:bg-black/60 hover:border-pink-400"
-                  >
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
+    <div className="flex flex-col items-center group cursor-default">
+      <div className="relative transform-gpu transition-transform duration-500 ease-out group-hover:scale-105" style={{ width: size, height: size }}>
+        <svg className="transform -rotate-90" style={{ width: size, height: size }}>
+          {/* Background circle */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            strokeWidth={strokeWidth}
+            fill="none"
+            className="stroke-white/10"
+          />
+          {/* Progress circle */}
+          <motion.circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            strokeWidth={strokeWidth}
+            fill="none"
+            strokeLinecap="round"
+            className={colorClass}
+            strokeDasharray={circumference}
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset: offset }}
+            transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1], delay: 0.2 }} // Apple ease
+          />
+        </svg>
+        {/* Center content */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-3xl font-light tracking-tighter text-white">{score}</span>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+      <span className="mt-3 text-sm font-medium text-white/90 capitalize tracking-wide">{label}</span>
+      <span className="text-xs text-white/40 font-medium tracking-wide mt-0.5">{getRating(score)}</span>
+    </div>
   );
 }
 
-function MetricGauge({ name, score, rating, color }: { name: string; score: number; rating: string; color: string }) {
+// Minimalist Tag Component
+function Tag({ children, variant = "default" }: { children: React.ReactNode; variant?: "genre" | "instrument" | "mood" | "influence" | "default" }) {
+  // Using subtle backgrounds instead of borders/gradients
+  const variants = {
+    genre: "bg-blue-500/10 text-blue-300 hover:bg-blue-500/20",
+    instrument: "bg-orange-500/10 text-orange-300 hover:bg-orange-500/20",
+    mood: "bg-rose-500/10 text-rose-300 hover:bg-rose-500/20",
+    influence: "bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20",
+    default: "bg-white/5 text-white/70 hover:bg-white/10",
+  };
+
   return (
-    <div className="mb-4 last:mb-0">
-      <div className="flex justify-between items-center mb-2">
-        <div>
-          <div className="text-sm font-medium text-white">{name}</div>
-          <div className="text-xs text-white/60">{rating}</div>
-        </div>
-        <div className="text-lg font-bold text-white">{score}%</div>
+    <span className={`cursor-default inline-flex items-center px-3 py-1 rounded-full text-[11px] font-medium transition-all duration-300 ${variants[variant]}`}>
+      {children}
+    </span>
+  );
+}
+
+// Section Heading Component
+function SectionHeading({ icon, title, subtitle }: { icon: string; title: string; subtitle?: string }) {
+  return (
+    <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 ring-1 ring-white/10">
+        <Icon icon={icon} className="w-4 h-4 text-white/90" />
       </div>
-      <div className="h-2 bg-black/40 rounded-full overflow-hidden">
-        <motion.div
-          className={`h-full ${color}`}
-          initial={{ width: 0 }}
-          animate={{ width: `${score}%` }}
-          transition={{ duration: 1, ease: "easeOut" }}
-        />
+      <div>
+        <h3 className="text-base font-semibold text-white tracking-tight">{title}</h3>
+        {subtitle && <p className="text-xs text-white/40 font-medium tracking-wide">{subtitle}</p>}
       </div>
     </div>
+  );
+}
+
+// Insight Item Component
+function InsightItem({ type, content, index }: { type: "positive" | "negative"; content: string; index: number }) {
+  const isPositive = type === "positive";
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: isPositive ? -10 : 10 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.4, delay: index * 0.05 }}
+      className="group flex items-start gap-3 py-2"
+    >
+      <div className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${
+        isPositive ? "bg-emerald-500/10 text-emerald-400" : "bg-orange-500/10 text-orange-400"
+      }`}>
+        <Icon 
+          icon={isPositive ? "solar:check-circle-linear" : "solar:info-circle-linear"} 
+          className="w-3.5 h-3.5" 
+        />
+      </div>
+      <p className="text-sm text-white/70 leading-relaxed font-light group-hover:text-white transition-colors">{content}</p>
+    </motion.div>
+  );
+}
+
+// Expandable Analysis Detail Card
+function DetailCard({ icon, title, content, color, index }: { icon: string; title: string; content: string; color: string; index: number }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  // Truncate to first 2 sentences for initial view
+  const sentences = content.split('. ');
+  const isLong = sentences.length > 2;
+  const truncatedContent = isLong && !isExpanded 
+    ? sentences.slice(0, 2).join('. ') + '.'
+    : content;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: index * 0.05 }}
+      onClick={() => setIsExpanded(!isExpanded)}
+      className="group cursor-pointer p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] hover:border-white/10 transition-all duration-300"
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2.5">
+          <Icon icon={icon} className="w-5 h-5 text-white/80" />
+          <span className="text-sm font-medium text-white/90">{title}</span>
+        </div>
+        {isLong && (
+          <div className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+            <Icon icon="solar:alt-arrow-down-linear" className="w-4 h-4 text-white/30 group-hover:text-white/70" />
+          </div>
+        )}
+      </div>
+      <motion.div
+        initial={false}
+        animate={{ height: "auto" }}
+      >
+        <p className="text-sm text-white/60 leading-relaxed font-light">
+          {truncatedContent}
+        </p>
+        {!isExpanded && isLong && (
+          <p className="text-[10px] text-white/30 mt-3 font-medium uppercase tracking-widest group-hover:text-white/50 transition-colors">Read more</p>
+        )}
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function TrackOverview({ analysis, isGuest }: { analysis: Analysis; isGuest?: boolean }) {
+  const instrumentIcons: Record<string, string> = {
+    "vocals": "solar:microphone-3-linear",
+    "guitar": "solar:guitar-linear",
+    "drums": "solar:music-note-linear", // Iconify doesn't have a specific drum kit linear in solar set often, using generic music note or similar. Let's try 'solar:music-note-2-linear'
+    "bass": "solar:speaker-linear",
+    "synth": "solar:keyboard-linear",
+    "piano": "solar:keyboard-linear",
+  };
+
+  const getInstrumentIcon = (instrument: string) => {
+    const lowerInstrument = instrument.toLowerCase();
+    for (const [key, icon] of Object.entries(instrumentIcons)) {
+      if (lowerInstrument.includes(key)) return icon;
+    }
+    return "solar:headphones-round-linear";
+  };
+
+  return (
+    <TiltWrapper className="h-full rounded-2xl">
+      <div className="h-full rounded-2xl p-6 bg-[#0A0A0A] border border-white/[0.08] relative overflow-hidden group">
+        
+        <SectionHeading 
+          icon="solar:disk-linear"
+          title="Track DNA"
+          subtitle="Genre, instruments & vibe"
+        />
+
+        <div className="space-y-6 relative">
+          {/* Genre & Type */}
+          <div>
+            <label className="text-[10px] uppercase tracking-widest text-white/30 mb-2.5 block font-medium">Genre</label>
+            <div className="flex flex-wrap gap-2">
+              <Tag variant="genre">{analysis.primary_genre || 'Unknown'}</Tag>
+              {analysis.track_type && <Tag variant="genre">{analysis.track_type}</Tag>}
+            </div>
+          </div>
+          
+          {/* Influences */}
+          {analysis.secondary_influences && analysis.secondary_influences.length > 0 && (
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-white/30 mb-2.5 block font-medium">Influences</label>
+              <div className="flex flex-wrap gap-2">
+                {analysis.secondary_influences.slice(0, 4).map((influence, i) => (
+                  <Tag key={i} variant="influence">{influence}</Tag>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Key Instruments */}
+          {analysis.key_instruments && analysis.key_instruments.length > 0 && (
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-white/30 mb-2.5 block font-medium">Instruments</label>
+              <div className="flex flex-wrap gap-2">
+                {analysis.key_instruments.slice(0, 5).map((instrument, i) => (
+                  <span 
+                    key={i}
+                    className="cursor-default inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium bg-orange-500/10 text-orange-300 transition-all duration-300 hover:bg-orange-500/20"
+                  >
+                    <Icon icon={getInstrumentIcon(instrument)} className="w-3.5 h-3.5" />
+                    {instrument}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Mood */}
+          {analysis.mood_tags && analysis.mood_tags.length > 0 && (
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-white/30 mb-2.5 block font-medium">Mood</label>
+              <div className="flex flex-wrap gap-2">
+                {analysis.mood_tags.slice(0, 4).map((tag, i) => (
+                  <Tag key={i} variant="mood">{tag}</Tag>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </TiltWrapper>
   );
 }
 
@@ -143,148 +284,121 @@ function LockedOverlay({ cta }: { cta: string }) {
 }
 
 function PerformanceMetrics({ analysis, isGuest }: { analysis: Analysis; isGuest?: boolean }) {
-  const getMetricData = (score: number | undefined, metricName: string) => {
-    const numScore = score || 0;
-    const colors = {
-      melody: 'bg-green-400', // Bright green
-      harmony: 'bg-blue-400', // Bright blue
-      rhythm: 'bg-pink-400', // Bright pink
-      production: 'bg-purple-400', // Bright purple
-    };
-    
-    const rating = 
-      numScore >= 95 ? 'Masterpiece' :
-      numScore >= 90 ? 'Outstanding' :
-      numScore >= 85 ? 'Excellent' :
-      numScore >= 80 ? 'Very Good' :
-      numScore >= 75 ? 'Good' :
-      numScore >= 70 ? 'Solid' :
-      numScore >= 65 ? 'Fair' :
-      'Needs Work';
+  const metrics = analysis.scores ? [
+    { name: "melody", score: analysis.scores.melody || 0, color: "emerald" },
+    { name: "harmony", score: analysis.scores.harmony || 0, color: "blue" },
+    { name: "rhythm", score: analysis.scores.rhythm || 0, color: "amber" },
+    { name: "production", score: analysis.scores.production || 0, color: "violet" },
+  ] : [];
 
-    return { 
-      rating, 
-      color: colors[metricName as keyof typeof colors] || 'bg-white'
-    };
-  };
-
-  const metrics = analysis.scores ? Object.entries(analysis.scores).map(([name, score]) => {
-    const { rating, color } = getMetricData(score, name);
-    return {
-      name,
-      score: score || 0,
-      rating,
-      color
-    };
-  }) : [];
+  const overallScore = metrics.length > 0 
+    ? Math.round(metrics.reduce((acc, m) => acc + m.score, 0) / metrics.length)
+    : 0;
 
   return (
-    <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300 relative transform-gpu will-change-transform hover:-translate-y-0.5 hover:bg-white/5">
-      <GlowingEffect
-        blur={0}
-        borderWidth={1}
-        spread={80}
-        glow={true}
-        disabled={true}
-        proximity={64}
-        inactiveZone={0.01}
-      />
-      <CardHeader className="pb-4">
-        <CardTitle className="text-xl font-bold text-white">
-          Performance Metrics
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+    <TiltWrapper className="h-full rounded-2xl">
+      <div className="h-full rounded-2xl p-6 bg-[#0A0A0A] border border-white/[0.08] relative overflow-hidden group">
+        
+        <SectionHeading 
+          icon="solar:speedometer-linear"
+          title="Performance"
+          subtitle="Scored out of 100"
+        />
+
         <div className={isGuest ? 'relative' : ''}>
           <div className={isGuest ? 'filter blur-2xl brightness-50 select-none pointer-events-none' : ''}>
-            {metrics.map((metric) => (
-              <MetricGauge key={metric.name} {...metric} />
-            ))}
+            {/* Overall Score - Large Center Gauge */}
+            <div className="flex justify-center mb-8">
+              <div className="relative">
+                <CircularGauge score={overallScore} label="overall" color="violet" size={140} />
+              </div>
+            </div>
+
+            {/* Individual Metrics Grid */}
+            <div className="grid grid-cols-4 gap-2">
+              {metrics.map((metric, i) => (
+                <CircularGauge 
+                  key={metric.name} 
+                  score={metric.score} 
+                  label={metric.name} 
+                  color={metric.color}
+                  size={70}
+                />
+              ))}
+            </div>
           </div>
           {isGuest && (
-            <LockedOverlay cta="Sign in to unlock performance scores" />
+            <LockedOverlay cta="Sign in to unlock scores" />
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </TiltWrapper>
   );
 }
 
 function KeyInsights({ analysis, isGuest }: { analysis: Analysis; isGuest?: boolean }) {
-  const insights = [];
+  const strengths = analysis.strengths || [];
+  const improvements = analysis.improvements || [];
 
-  // Add strengths as positive insights
-  if (analysis.strengths) {
-    insights.push(...analysis.strengths.map(strength => ({
-      type: 'positive' as const,
-      content: strength
-    })));
-  }
-
-  // Add improvements as negative insights
-  if (analysis.improvements) {
-    insights.push(...analysis.improvements.map(improvement => ({
-      type: 'negative' as const,
-      content: improvement
-    })));
-  }
-
-  const iconMap = {
-    positive: <CheckCircle className="w-4 h-4 text-green-500" />,
-    negative: <AlertCircle className="w-4 h-4 text-red-500" />,
-    info: <Info className="w-4 h-4 text-white" />,
-  };
-
-  // Determine which insights remain fully visible for guests: one positive and one negative
-  const positiveIndex = insights.findIndex((i) => i.type === 'positive');
-  const negativeIndex = insights.findIndex((i) => i.type === 'negative');
-  const visibleIndices = new Set<number>();
-  if (positiveIndex >= 0) visibleIndices.add(positiveIndex);
-  if (negativeIndex >= 0) visibleIndices.add(negativeIndex);
+  // Show first item of each for guests
+  const visibleStrengths = isGuest ? strengths.slice(0, 1) : strengths;
+  const visibleImprovements = isGuest ? improvements.slice(0, 1) : improvements;
 
   return (
-    <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300 relative md:col-span-2 transform-gpu will-change-transform hover:-translate-y-0.5 hover:bg-white/5">
-      <GlowingEffect
-        blur={0}
-        borderWidth={1}
-        spread={80}
-        glow={true}
-        disabled={true}
-        proximity={64}
-        inactiveZone={0.01}
-      />
-      <CardHeader className="pb-4">
-        <CardTitle className="text-xl font-bold text-white">
-          Key Insights
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        <div className={isGuest ? 'relative group' : ''}>
-          <div className="space-y-2">
-            {insights.map((insight, index) => {
-              const keepVisible = !isGuest || visibleIndices.has(index);
-              return (
-                <motion.div
-                  key={index}
-                  className="flex items-start p-2 rounded-lg bg-black/40 border border-white/20"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2, delay: index * 0.05 }}
-                >
-                  <div className="mr-3 mt-1">{iconMap[insight.type as keyof typeof iconMap]}</div>
-                  <p className={keepVisible ? 'text-sm text-white/90' : 'text-sm text-white/90 filter blur-sm select-none'}>
-                    {insight.content}
-                  </p>
-                </motion.div>
-              );
-            })}
+    <TiltWrapper className="md:col-span-2 rounded-2xl">
+      <div className="h-full rounded-2xl p-6 bg-[#0A0A0A] border border-white/[0.08] relative overflow-hidden group">
+        
+        <SectionHeading 
+          icon="solar:bolt-linear"
+          title="Quick Insights"
+          subtitle="What's working & what needs work"
+        />
+
+        <div className={isGuest ? 'relative' : ''}>
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Strengths Column */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span className="text-[11px] uppercase tracking-widest text-emerald-400 font-medium">Strengths</span>
+              </div>
+              <div className="space-y-1">
+                {visibleStrengths.map((strength, i) => (
+                  <InsightItem key={i} type="positive" content={strength} index={i} />
+                ))}
+                {isGuest && strengths.length > 1 && (
+                  <div className="p-3 rounded-xl border border-white/10 bg-white/5 text-center mt-2">
+                    <span className="text-xs text-white/40">+{strengths.length - 1} more strengths</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Improvements Column */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                <span className="text-[11px] uppercase tracking-widest text-amber-400 font-medium">To Improve</span>
+              </div>
+          <div className="space-y-1">
+                {visibleImprovements.map((improvement, i) => (
+                  <InsightItem key={i} type="negative" content={improvement} index={i} />
+                ))}
+                {isGuest && improvements.length > 1 && (
+                  <div className="p-3 rounded-xl border border-white/10 bg-white/5 text-center mt-2">
+                    <span className="text-xs text-white/40">+{improvements.length - 1} more suggestions</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
+
           {isGuest && (
-            <LockedOverlay cta="Sign in to unlock all insights" />
+            <LockedOverlay cta="Sign in for all insights" />
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </TiltWrapper>
   );
 }
 
@@ -298,75 +412,78 @@ function DetailedAnalysis({ analysis, isGuest }: { analysis: Analysis; isGuest?:
     {
       title: "Composition",
       content: analysis.analysis.composition || '',
-      icon: <Music className="w-5 h-5 text-green-400" />
+      icon: "solar:music-notes-linear",
+      color: "emerald"
     },
     {
-      title: "Production & Mix",
+      title: "Production",
       content: analysis.analysis.production || '',
-      icon: <Waves className="w-5 h-5 text-blue-400" />
+      icon: "solar:soundwave-linear",
+      color: "blue"
     },
     {
-      title: "Instrument Interplay",
+      title: "Instruments",
       content: analysis.analysis.instrument_interplay || '',
-      icon: <Music className="w-5 h-5 text-pink-400" />
+      icon: "solar:guitar-linear",
+      color: "pink"
     },
     {
-      title: isVocalTrack ? "Lyrics & Delivery" : "Musical Journey",
+      title: isVocalTrack ? "Vocals & Lyrics" : "Musical Journey",
       content: narrativeContent || '',
-      icon: <Info className="w-5 h-5 text-purple-400" />
+      icon: isVocalTrack ? "solar:microphone-3-linear" : "solar:stars-minimalistic-linear",
+      color: "violet"
     }
   ].filter(section => section.content);
 
+  if (sections.length === 0) return null;
+
+  // For guests, only show composition
+  const visibleSections = isGuest ? sections.filter(s => s.title === "Composition") : sections;
+  const hiddenCount = sections.length - visibleSections.length;
+
   return (
-    <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300 relative md:col-span-2 transform-gpu will-change-transform hover:-translate-y-0.5 hover:bg-white/5">
-      <GlowingEffect
-        blur={0}
-        borderWidth={1}
-        spread={80}
-        glow={true}
-        disabled={true}
-        proximity={64}
-        inactiveZone={0.01}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.3 }}
+      className="rounded-2xl p-6 bg-[#0A0A0A] border border-white/[0.08] md:col-span-2 relative overflow-hidden group"
+    >
+      <SectionHeading 
+        icon="solar:layers-linear"
+        title="Deep Dive"
+        subtitle="Detailed breakdown"
       />
-      <CardHeader className="pb-4">
-        <CardTitle className="text-xl font-bold text-white">
-          Detailed Analysis
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className={isGuest ? 'relative group' : ''}>
-          <div className="space-y-4">
-            {sections.map((section, index) => {
-              const isComposition = section.title === 'Composition';
-              const lockThis = isGuest && !isComposition;
-              return (
-                <motion.div
-                  key={section.title}
-                  className="p-4 rounded-lg bg-black/40 border border-white/20"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2, delay: index * 0.1 }}
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    {section.icon}
-                    <h3 className="text-sm font-medium text-white">{section.title}</h3>
-                  </div>
-                  <p className={lockThis ? 'text-sm text-white/80 leading-relaxed filter blur-sm select-none' : 'text-sm text-white/80 leading-relaxed'}>
-                    {section.content}
-                  </p>
-                </motion.div>
-              );
-            })}
+
+      <div className={isGuest && hiddenCount > 0 ? 'relative' : ''}>
+        <div className="grid md:grid-cols-2 gap-4">
+          {visibleSections.map((section, index) => (
+            <DetailCard 
+              key={section.title}
+              icon={section.icon}
+              title={section.title}
+              content={section.content}
+              color={section.color}
+              index={index}
+            />
+          ))}
+          {isGuest && hiddenCount > 0 && (
+            <div className="md:col-span-2 p-6 rounded-2xl border border-white/10 bg-white/5 text-center">
+              <Icon icon="solar:lock-keyhole-linear" className="w-6 h-6 text-white/30 mx-auto mb-2" />
+              <span className="text-sm text-white/40">+{hiddenCount} more detailed sections</span>
           </div>
-          {isGuest && (
-            <LockedOverlay cta="Sign in to unlock full analysis" />
           )}
         </div>
-      </CardContent>
-    </Card>
+
+        {isGuest && hiddenCount > 0 && (
+          <LockedOverlay cta="Sign in for full analysis" />
+        )}
+      </div>
+    </motion.div>
   );
 }
 
+// ... rest of the file (AudioAnalysisProps and AudioAnalysis export) remains the same as previous step, but I need to include it for the write tool to be correct.
+// Re-including AudioAnalysis main component for completeness
 interface AudioAnalysisProps {
   analysis: Analysis;
   audioFile: File | null;
@@ -454,13 +571,16 @@ export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset, hideSave
   if (!analysis) {
     console.log('❌ AudioAnalysis - No analysis data, showing loading state');
     return (
-      <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300 relative">
-        <CardContent className="p-6">
-          <div className="text-center text-white/60">
-            Loading analysis...
+      <div className="glass-card rounded-2xl p-8 text-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="w-12 h-12 mx-auto mb-4"
+        >
+          <Icon icon="solar:disk-linear" className="w-12 h-12 text-white/20" />
+        </motion.div>
+        <p className="text-white/60">Analyzing your track...</p>
           </div>
-        </CardContent>
-      </Card>
     );
   }
 
@@ -469,178 +589,147 @@ export function AudioAnalysis({ analysis, audioFile, audioUrl, onReset, hideSave
     const isRateLimitError = errorType === "RATE_LIMIT_EXCEEDED" || errorType === "QUOTA_EXCEEDED";
 
     return (
-      <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300">
-        <CardContent className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-white">
-              {isRateLimitError ? "Too Many Requests" : "Analysis Failed"}
+      <div className="glass-card rounded-2xl p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-display font-bold text-white">
+            {isRateLimitError ? "Rate Limited" : "Analysis Failed"}
             </h2>
             {onReset && (
               <button
                 onClick={onReset}
-                className="px-3 py-1 text-sm bg-black/40 border border-white/40 hover:border-white text-white rounded-md transition-colors"
+              className="px-4 py-2 text-sm bg-white/5 border border-white/20 hover:border-white/40 text-white rounded-xl transition-all duration-200 hover:bg-white/10"
               >
                 Try Again
               </button>
             )}
           </div>
 
-          <div className="flex items-center gap-3 mb-4">
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-              isRateLimitError ? 'bg-yellow-500/20' : 'bg-red-500/20'
-            }`}>
-              {isRateLimitError ? (
-                <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              ) : (
-                <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-              )}
-            </div>
+        <div className={`p-4 rounded-xl border ${isRateLimitError ? 'bg-amber-500/10 border-amber-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+          <div className="flex items-start gap-3">
+            <Icon icon="solar:danger-circle-linear" className={`w-5 h-5 flex-shrink-0 ${isRateLimitError ? 'text-amber-400' : 'text-red-400'}`} />
             <div>
               <p className="text-white/80">{analysis.error}</p>
               {isRateLimitError && (
-                <p className="text-sm text-yellow-400 mt-1">
-                  This happens when too many requests are made to the AI service.
+                <p className="text-sm text-amber-400/80 mt-2">
+                  Please wait a moment before trying again.
                 </p>
               )}
-            </div>
-          </div>
-
-          {isRateLimitError && (
-            <div className="mt-4 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-              <div className="flex items-start gap-2">
-                <svg className="w-4 h-4 text-yellow-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div>
-                  <p className="text-sm text-yellow-400 font-medium">Rate Limit Information</p>
-                  <p className="text-xs text-yellow-300 mt-1">
-                    {errorType === "RATE_LIMIT_EXCEEDED"
-                      ? "The AI service is temporarily busy. Please wait a moment before trying again."
-                      : "You've reached your daily limit for AI analysis. Please try again tomorrow."
-                    }
-                  </p>
                 </div>
               </div>
             </div>
-          )}
 
           {analysis.details && process.env.NODE_ENV !== "production" && (
             <details className="mt-4">
-              <summary className="cursor-pointer text-sm text-white/60 hover:text-white/80">
+            <summary className="cursor-pointer text-sm text-white/40 hover:text-white/60">
                 Technical Details
               </summary>
-              <pre className="mt-2 p-4 bg-black/40 border border-white/20 rounded text-sm text-white/60 overflow-auto">
+            <pre className="mt-2 p-4 bg-black/40 border border-white/10 rounded-xl text-xs text-white/50 overflow-auto font-mono">
                 {analysis.details}
               </pre>
             </details>
           )}
-        </CardContent>
-      </Card>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold text-white">
-            Analysis Results
+    <div className="space-y-6">
+      {/* Header */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+      >
+        <div className="flex items-center gap-4">
+          <h2 className="text-2xl font-semibold text-white tracking-tight">
+            Analysis
           </h2>
-          {/* Analysis tier badge */}
+          {/* Tier badge - Minimalist */}
           {user ? (
-            <span
-              className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full text-xs font-semibold text-white bg-gradient-to-r from-indigo-500/80 via-purple-500/80 to-emerald-500/80 ring-1 ring-white/20 shadow-[0_0_20px_rgba(99,102,241,0.25)] backdrop-blur hover:brightness-110 transition-all duration-200 select-none"
-              title="Advanced analysis unlocked"
+            <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium bg-white/10 text-white/80 border border-white/10"
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              Advanced
-            </span>
+              <Icon icon="solar:stars-minimalistic-linear" className="w-3.5 h-3.5" />
+              Pro
+            </motion.span>
           ) : (
-            <span
-              className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full text-xs font-semibold text-white/80 bg-white/5 border border-white/15 ring-1 ring-white/10 backdrop-blur-sm hover:bg-white/8 transition-colors select-none"
-              title="Basic analysis — sign in to unlock advanced"
-            >
-              <Lock className="w-3.5 h-3.5 text-white/70" />
-              Basic
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium bg-white/5 border border-white/10 text-white/50">
+              <Icon icon="solar:lock-keyhole-linear" className="w-3.5 h-3.5" />
+              Preview
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        
           {onReset && (
-            <button 
+          <motion.button 
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
               onClick={onReset}
-              className="relative inline-flex h-12 overflow-hidden rounded-md p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50"
+            className="group relative px-4 py-2 rounded-lg bg-white text-black font-medium text-sm transition-all duration-300 hover:bg-white/90"
             >
-              <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)]" />
-              <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-md bg-slate-950 px-3 py-1 text-sm font-medium text-white backdrop-blur-3xl">
+            <span className="relative z-10 flex items-center gap-2">
+              <Icon icon="solar:refresh-linear" className="w-4 h-4" />
                 New Analysis
               </span>
-            </button>
+          </motion.button>
           )}
-        </div>
-      </div>
+      </motion.div>
 
+      {/* Waveform Player Card */}
       {audioFile && audioUrl && (
-        <Card className="bg-black/40 backdrop-blur-lg border border-white/20 hover:border-white/40 transition-all duration-300 relative transform-gpu will-change-transform hover:-translate-y-0.5 hover:bg-white/5">
-          <GlowingEffect
-            blur={0}
-            borderWidth={1}
-            spread={80}
-            glow={true}
-            disabled={true}
-            proximity={64}
-            inactiveZone={0.01}
-          />
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-bold text-white">
-              Analyzed Track
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between text-sm text-white/60">
-                <span>{audioFile.name}</span>
-                <span>{(audioFile.size / (1024 * 1024)).toFixed(2)} MB</span>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-2xl p-6 bg-[#0A0A0A] border border-white/[0.08]"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-white/[0.03] flex items-center justify-center border border-white/[0.05]">
+                <Icon icon="solar:music-note-2-linear" className="w-6 h-6 text-white/50" />
               </div>
-              {/* COMMENTED OUT: AI Comments toggle temporarily disabled for refinement */}
-              <AnnotatedWaveformPlayer audioUrl={audioUrl} analysis={analysis} showCommentsToggle={false} />
+              <div>
+                <h3 className="text-sm font-medium text-white truncate max-w-[200px] sm:max-w-none">{audioFile.name}</h3>
+                <p className="text-xs text-white/40 mt-0.5">{(audioFile.size / (1024 * 1024)).toFixed(2)} MB</p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+          <AnnotatedWaveformPlayer audioUrl={audioUrl} analysis={analysis} showCommentsToggle={false} />
+        </motion.div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Main Analysis Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <TrackOverview analysis={analysis} isGuest={!user} />
         <PerformanceMetrics analysis={analysis} isGuest={!user} />
+        <KeyInsights analysis={analysis} isGuest={!user} />
+        <DetailedAnalysis analysis={analysis} isGuest={!user} />
       </div>
 
-      <KeyInsights analysis={analysis} isGuest={!user} />
-      <DetailedAnalysis analysis={analysis} isGuest={!user} />
-
-      {/* Compact API Quota Display at Bottom (hide for guests) */}
+      {/* API Quota Display */}
       {!hideQuotaDisplay && user && (
         <div className="pt-4">
           <ApiQuotaDisplay />
         </div>
       )}
 
-      {/* Additional New Analysis Button at Bottom */}
+      {/* Bottom CTA */}
       {onReset && (
-        <div className="flex justify-center pt-4">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="flex justify-center pt-6"
+        >
           <button 
             onClick={onReset}
-            className="relative inline-flex h-12 overflow-hidden rounded-md p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50"
+            className="group flex items-center gap-2 px-6 py-3 rounded-full bg-white/5 border border-white/10 text-white/70 hover:text-white hover:border-white/30 transition-all duration-300"
           >
-            <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)]" />
-            <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-md bg-slate-950 px-3 py-1 text-sm font-medium text-white backdrop-blur-3xl">
-              New Analysis
-            </span>
+            <Icon icon="solar:disk-linear" className="w-4 h-4 group-hover:animate-spin" />
+            Analyze Another Track
           </button>
-        </div>
+        </motion.div>
       )}
     </div>
   );
